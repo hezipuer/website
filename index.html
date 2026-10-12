@@ -1,0 +1,1776 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>急时救 · AI 急救科普互动站</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='15' fill='%23E63946'/%3E%3Cpath d='M8 16h4l2-5 4 10 2-5h4' stroke='white' stroke-width='2.6' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://miaoda.feishu.cn">
+<link rel="stylesheet" href="https://miaoda.feishu.cn/fonts/css2?family=Noto+Sans+SC:wght@400;500;700;900&display=swap">
+<script defer src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js" onerror="window.__echartsFail&&window.__echartsFail()"></script>
+<style>
+/* ===== token：急诊红 + 海军蓝 + 浅青，专业急救手册质感 ===== */
+:root{
+  --red:#E63946; --red-d:#C1121F;
+  --navy:#1D3557; --navy-d:#14243C; --ink:#17324D;
+  --aqua:#A8DADC; --aqua-l:#EAF4F5;
+  --warm:#F5F7FA; --amber:#FFB703; --ok:#2A9D8F;
+  --gray:#6B7C93; --line:#E6EAF0; --card:#fff;
+  --shadow:0 10px 30px rgba(29,53,87,.10);
+  --shadow-sm:0 4px 14px rgba(29,53,87,.08);
+  --r:16px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;}
+body{font-family:"Noto Sans SC",-apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",sans-serif;background:var(--warm);color:var(--ink);font-size:16px;line-height:1.6;overflow-x:hidden;}
+#app{width:100%;max-width:900px;margin:0 auto;min-height:100vh;position:relative;}
+
+/* ===== 顶栏：品牌 + 分格导览 ===== */
+#topbar{position:sticky;top:0;z-index:80;background:#fff;border-bottom:1px solid var(--line);box-shadow:0 2px 14px rgba(29,53,87,.05);}
+#topbar .brandrow{display:flex;align-items:center;gap:10px;padding:10px 16px 4px;}
+#topbar .brand{display:flex;align-items:center;gap:8px;font-weight:900;font-size:16px;color:var(--navy);cursor:pointer;}
+#topbar .brand .logo{width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,var(--red),var(--red-d));display:flex;align-items:center;justify-content:center;box-shadow:0 4px 10px rgba(230,57,70,.35);}
+#topbar .brand .logo svg{width:18px;height:18px;}
+#topbar .pager{font-size:12px;color:var(--gray);font-weight:700;margin-left:auto;}
+#navgrid{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;padding:8px 12px 12px;}
+#navgrid .g{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:56px;border:none;border-radius:12px;background:var(--warm);color:var(--gray);font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;transition:all .18s;}
+#navgrid .g svg{width:20px;height:20px;}
+#navgrid .g:hover{background:#EDF1F6;color:var(--navy);}
+#navgrid .g.on{background:var(--red);color:#fff;box-shadow:0 6px 14px rgba(230,57,70,.35);}
+
+/* ===== 视图 ===== */
+.view{display:none;padding:20px 16px 120px;animation:viewIn .4s ease;}
+.view.active{display:block;}
+@keyframes viewIn{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:none;}}
+
+/* ===== 文字 ===== */
+.kicker{display:inline-block;font-size:12px;font-weight:700;letter-spacing:.16em;color:var(--red);margin-bottom:8px;}
+h1.page{font-size:27px;font-weight:900;color:var(--navy);line-height:1.25;margin-bottom:6px;}
+h2.sec{font-size:19px;font-weight:900;color:var(--navy);margin:24px 0 12px;line-height:1.3;display:flex;align-items:center;gap:9px;}
+h2.sec::before{content:"";width:5px;height:19px;background:var(--red);border-radius:3px;}
+p.lead{color:#3E5470;font-size:15px;margin:6px 0 16px;}
+p.note{color:var(--gray);font-size:13px;margin-top:8px;}
+.small{font-size:13px;color:var(--gray);}
+.secthead{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+.secthead .tag{background:var(--red);color:#fff;font-size:12px;font-weight:900;padding:3px 11px;border-radius:7px;letter-spacing:.05em;}
+.secthead span{font-size:12px;font-weight:700;color:var(--gray);letter-spacing:.1em;}
+
+/* ===== 卡片 ===== */
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:18px;box-shadow:var(--shadow-sm);margin:12px 0;}
+.card.red{border-color:#F2C1C6;background:#FDF2F3;}
+.card.aqua{border-color:#CBE5E7;background:#F2F9FA;}
+.card.navy{background:linear-gradient(135deg,var(--navy),#2A4670);border:none;color:#EDF2F9;box-shadow:var(--shadow);}
+.card.navy h3,.card.navy .t,.card.navy p,.card.navy .l{color:#fff;}
+.card h3{font-size:16px;font-weight:900;color:var(--navy);margin-bottom:8px;}
+
+/* ===== 步骤 ===== */
+.steps{display:flex;flex-direction:column;gap:12px;}
+.step{display:flex;gap:13px;align-items:flex-start;}
+.step .n{flex:none;width:32px;height:32px;border-radius:50%;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:15px;box-shadow:0 4px 8px rgba(29,53,87,.2);}
+.step.alt .n{background:var(--red);box-shadow:0 4px 8px rgba(230,57,70,.3);}
+.step .bd{min-width:0;}
+.step .t{font-weight:800;color:var(--navy);font-size:15.5px;}
+.step .d{font-size:14px;color:#3E5470;margin-top:2px;}
+
+/* ===== 按钮 ===== */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:48px;padding:12px 20px;border:none;border-radius:14px;font-family:inherit;font-size:16px;font-weight:700;cursor:pointer;transition:transform .12s,box-shadow .12s,filter .12s;}
+.btn:active{transform:scale(.97);}
+.btn.red{background:var(--red);color:#fff;box-shadow:0 8px 18px rgba(230,57,70,.32);}
+.btn.navy{background:var(--navy);color:#fff;box-shadow:0 8px 18px rgba(29,53,87,.3);}
+.btn.aqua{background:var(--aqua-l);color:var(--navy);border:1px solid var(--aqua);}
+.btn.ghost{background:#fff;color:var(--navy);border:1.5px solid var(--line);}
+.btn.sm{min-height:40px;padding:8px 15px;font-size:14px;}
+.btn:disabled{opacity:.5;cursor:not-allowed;}
+.btn .ar{transition:transform .2s;}
+.btn:hover .ar{transform:translateX(3px);}
+
+/* ===== 底部导航 ===== */
+#navbar{position:fixed;bottom:0;left:0;right:0;z-index:80;background:rgba(255,255,255,.97);backdrop-filter:blur(8px);border-top:1px solid var(--line);padding:10px 16px calc(10px + env(safe-area-inset-bottom));}
+#navbar .in{max-width:900px;margin:0 auto;display:flex;gap:8px;align-items:center;}
+#navbar .btn{flex:1;}
+#navbar .btn.hm{flex:0 0 auto;min-width:66px;}
+#navbar .btn.prev{flex:1;}
+
+/* ===== 网格 / 图文 ===== */
+.media{width:100%;max-width:520px;margin:12px auto;border-radius:15px;overflow:hidden;background:#fff;border:1px solid var(--line);box-shadow:var(--shadow-sm);}
+.media img{width:100%;height:auto;display:block;}
+.media .cap{font-size:12.5px;color:var(--gray);padding:9px 13px;background:#FAFBFD;border-top:1px solid var(--line);}
+.tip{display:flex;gap:11px;align-items:flex-start;padding:14px 16px;border-radius:14px;font-size:14.5px;margin:12px 0;line-height:1.6;}
+/* 权威辟谣卡（仿科学辟谣平台） */
+/* 权威案例卡（真实急救场景 · 可跳转权威来源） */
+.case{background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px 18px;margin:16px 0;box-shadow:0 6px 18px rgba(20,40,80,.06);}
+.cs-head{display:flex;align-items:center;gap:14px;}
+.cs-no{font-size:38px;font-weight:800;color:#C7D0DD;line-height:.9;min-width:50px;font-variant-numeric:tabular-nums;letter-spacing:-1px;}
+.cs-main{flex:1;min-width:0;}
+.cs-title{font-size:17px;font-weight:800;color:var(--navy);line-height:1.4;}
+.cs-tags{display:flex;gap:6px;margin:7px 0;flex-wrap:wrap;}
+.cs-tags i{font-style:normal;font-size:11.5px;color:#1F5AA8;background:#EFF5FB;border-radius:6px;padding:2px 9px;}
+.cs-src{font-size:11.5px;color:#98A5B8;}
+.cs-badge{background:var(--navy);color:#fff;font-weight:800;font-size:14px;padding:10px 16px;border-radius:7px;flex-shrink:0;letter-spacing:2px;}
+.cs-scene{margin-top:12px;padding:11px 14px;background:#F7F9FC;border-left:3px solid var(--navy);border-radius:8px;font-size:13.5px;color:#3A4A62;line-height:1.7;}
+.cs-scene b{color:var(--navy);}
+.cs-link{margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;}
+.cs-link a{font-size:13px;font-weight:700;color:#1F5AA8;text-decoration:none;border:1px solid #C9DCF3;background:#F4F8FE;padding:7px 13px;border-radius:20px;display:inline-flex;align-items:center;gap:6px;}
+.cs-link a:hover{background:#E8F1FE;}
+.cs-link a svg{width:14px;height:14px;}
+.tip b{flex:none;font-weight:900;}
+.tip.warn{background:#FDEEEF;color:#A41823;border:1px solid #F2C1C6;}
+.tip.good{background:#EAF8F2;color:#1F7A63;border:1px solid #BCE3D4;}
+.tip.info{background:#EFF5FB;color:#1F5AA8;border:1px solid #C9DCF3;}
+
+/* ===== 首页 hero 轮播 ===== */
+.carousel{position:relative;border-radius:22px;overflow:hidden;margin:2px 0 18px;box-shadow:var(--shadow);background:#fff;}
+.car-track{position:relative;aspect-ratio:16/9;background:#0F1D38;}
+.car-track .slide{position:absolute;inset:0;opacity:0;transition:opacity .7s ease;pointer-events:none;}
+.car-track .slide.on{opacity:1;pointer-events:auto;}
+.car-track .slide img{width:100%;height:100%;object-fit:cover;display:block;}
+.capt{background:linear-gradient(135deg,#0F1D38,#243B5E);padding:16px 18px 18px;}
+.capt .k{font-size:12px;font-weight:700;letter-spacing:.16em;color:#FFC6CB;}
+.capt h1{font-size:24px;font-weight:900;line-height:1.25;color:#fff;margin:2px 0 0;}
+.capt p{font-size:14px;color:#D7E2F2;margin-top:6px;}
+.carousel .arrow{position:absolute;top:50%;transform:translateY(-50%);z-index:5;width:40px;height:40px;border-radius:50%;border:none;background:rgba(255,255,255,.9);color:var(--navy);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.18);}
+.carousel .arrow.prev{left:12px;}
+.carousel .arrow.next{right:12px;}
+.carousel .arrow svg{width:20px;height:20px;}
+.carousel .dots{position:absolute;bottom:12px;right:16px;z-index:5;display:flex;gap:6px;}
+.carousel .dots i{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.5);cursor:pointer;transition:all .25s;}
+.carousel .dots i.on{background:#fff;width:22px;border-radius:5px;}
+
+/* ===== 首页板块网格（3列整齐） ===== */
+.boards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+.board{background:#fff;border:1px solid var(--line);border-radius:16px;overflow:hidden;cursor:pointer;box-shadow:var(--shadow-sm);transition:transform .15s,box-shadow .18s;display:flex;flex-direction:column;}
+.board:hover{transform:translateY(-4px);box-shadow:var(--shadow);}
+.board:active{transform:scale(.98);}
+.board .thumb{aspect-ratio:4/3;overflow:hidden;position:relative;}
+.board .thumb img{width:100%;height:100%;object-fit:cover;transition:transform .4s;}
+.board:hover .thumb img{transform:scale(1.06);}
+.board .thumb .cnt{position:absolute;top:8px;right:8px;background:rgba(20,36,60,.72);color:#fff;font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;}
+.board .bd{padding:12px 13px 14px;display:flex;flex-direction:column;gap:5px;flex:1;}
+.board .bd .t{font-weight:900;color:var(--navy);font-size:15px;}
+.board .bd .d{font-size:13px;color:var(--gray);line-height:1.55;}
+.board .bd .go{font-size:12.5px;font-weight:800;color:var(--red);margin-top:auto;padding-top:8px;display:flex;align-items:center;gap:4px;}
+.board .bd .go svg{width:15px;height:15px;transition:transform .2s;}
+.board:hover .bd .go svg{transform:translateX(3px);}
+
+/* ===== 板块总览页 ===== */
+.land{position:relative;border-radius:20px;overflow:hidden;margin:2px 0 14px;box-shadow:var(--shadow);}
+.land img{width:100%;height:auto;display:block;min-height:190px;object-fit:cover;}
+.land .ov{position:absolute;left:0;right:0;bottom:0;padding:36px 20px 20px;background:linear-gradient(to top,rgba(20,36,60,.95),transparent);}
+.land .ov .k{font-size:12px;font-weight:700;letter-spacing:.16em;color:#FFC6CB;}
+.land .ov h1{font-size:26px;font-weight:900;color:#fff;line-height:1.2;}
+.land .ov p{font-size:14px;color:#D7E2F2;margin-top:6px;}
+.learn{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:18px;box-shadow:var(--shadow-sm);}
+.learn li{display:flex;gap:10px;align-items:flex-start;list-style:none;font-size:14.5px;color:#3E5470;padding:7px 0;}
+.learn li b{flex:none;color:var(--red);font-weight:900;}
+.chap{display:flex;flex-direction:column;gap:10px;margin-top:6px;}
+.chap .c{display:flex;align-items:center;gap:14px;background:#fff;border:1px solid var(--line);border-radius:15px;padding:15px 16px;cursor:pointer;box-shadow:var(--shadow-sm);transition:all .15s;text-align:left;font-family:inherit;}
+.chap .c:hover{border-color:var(--red);transform:translateX(4px);}
+.chap .c .no{flex:none;width:40px;height:40px;border-radius:12px;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:14px;}
+.chap .c .no.r{background:var(--red);}
+.chap .c .tx{flex:1;min-width:0;}
+.chap .c .tx .t{font-weight:900;color:var(--navy);font-size:15.5px;}
+.chap .c .tx .d{font-size:13px;color:var(--gray);margin-top:2px;}
+.chap .c .go{flex:none;width:32px;height:32px;border-radius:50%;background:var(--aqua-l);color:var(--navy);display:flex;align-items:center;justify-content:center;}
+
+/* ===== 数据块 / 图表 / 环 ===== */
+.statbar{display:flex;gap:10px;margin:6px 0;}
+.stat{flex:1;text-align:center;background:#fff;border:1px solid var(--line);border-radius:15px;padding:15px 6px;box-shadow:var(--shadow-sm);}
+.stat b{display:block;font-size:24px;font-weight:900;color:var(--red);font-variant-numeric:tabular-nums;line-height:1.1;}
+.stat span{font-size:12px;color:var(--gray);}
+.chart-box{width:100%;background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:6px;box-shadow:var(--shadow-sm);}
+.chart{width:100%;height:280px;}
+.ring{position:relative;width:158px;height:158px;margin:0 auto;}
+.ring svg{width:100%;height:100%;transform:rotate(-90deg);}
+.ring .tick{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.ring .tick b{font-size:44px;font-weight:900;color:var(--red);font-variant-numeric:tabular-nums;}
+.ring .tick span{font-size:13px;color:var(--gray);}
+
+/* ===== 选项 / 对错 ===== */
+.opt{display:flex;align-items:center;gap:11px;width:100%;text-align:left;background:#fff;border:1.5px solid var(--line);border-radius:14px;padding:14px 15px;font-family:inherit;font-size:15px;color:var(--ink);cursor:pointer;min-height:48px;transition:border-color .15s,background .15s;}
+.opt:hover{border-color:var(--aqua);}
+.opt .o{flex:none;width:27px;height:27px;border-radius:9px;background:var(--aqua-l);color:var(--navy);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:13px;}
+.opt.selected{border-color:var(--red);background:#FDF3F4;}
+.opt.selected .o{background:var(--red);color:#fff;}
+.opt.correct{border-color:var(--ok);background:#EAF8F2;}
+.opt.correct .o{background:var(--ok);color:#fff;}
+.opt.wrong{border-color:var(--red);background:#FDF3F4;}
+.opt.wrong .o{background:var(--red);color:#fff;}
+.verdict{display:none;margin-top:12px;padding:14px 16px;border-radius:14px;font-weight:700;font-size:15px;}
+.verdict.show{display:block;}
+.verdict.right{background:#EAF8F2;color:#1F7A63;border:1px solid #BCE3D4;}
+.verdict.wrong{background:#FDEEEF;color:#A41823;border:1px solid #F2C1C6;}
+
+/* ===== 焦点框（重点突出） ===== */
+.focus{position:relative;border-radius:16px;padding:16px 18px 16px 54px;margin:14px 0;}
+.focus .ic{position:absolute;left:14px;top:16px;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;}
+.focus .ic svg{width:17px;height:17px;}
+.focus .tt{font-weight:900;font-size:15px;}
+.focus .dd{font-size:14.5px;margin-top:3px;line-height:1.6;}
+.focus.do{background:#FDEEEF;border:1px solid #F2C1C6;}
+.focus.do .tt,.focus.do .dd{color:#A41823;}
+.focus.do .ic{background:#E63946;}
+.focus.dont{background:#FFF6E5;border:1px solid #F2DCA8;}
+.focus.dont .tt,.focus.dont .dd{color:#8A6100;}
+.focus.dont .ic{background:#FFB703;color:#fff;}
+.focus.key{background:#EFF5FB;border:1px solid #C9DCF3;}
+.focus.key .tt,.focus.key .dd{color:#1F5AA8;}
+.focus.key .ic{background:#1F5AA8;color:#fff;}
+
+/* ===== 清单 ===== */
+.checklist{display:flex;flex-direction:column;gap:10px;}
+.check{display:flex;align-items:center;gap:12px;background:#fff;border:1.5px solid var(--line);border-radius:14px;padding:13px 15px;cursor:pointer;min-height:48px;}
+.check .box{flex:none;width:25px;height:25px;border-radius:9px;border:2px solid var(--line);display:flex;align-items:center;justify-content:center;}
+.check.on{border-color:var(--ok);background:#EAF8F2;}
+.check.on .box{background:var(--ok);border-color:var(--ok);}
+.check.on .box svg{stroke:#fff;}
+
+/* ===== 大数字 ===== */
+.bignum{text-align:center;padding:12px 0;}
+.bignum .v{font-size:46px;font-weight:900;color:var(--red);font-variant-numeric:tabular-nums;line-height:1;}
+.bignum .l{font-size:14px;color:var(--ink);font-weight:700;margin-top:4px;}
+
+/* ===== 桌面 ===== */
+@media (min-width:768px){
+  #topbar .brandrow{padding:14px 24px 6px;}
+  #navgrid{padding:10px 24px 14px;gap:8px;}
+  #navgrid .g{min-height:62px;font-size:13px;}
+  .view{padding:30px 34px 130px;}
+  h1.page{font-size:33px;}
+  .chart{height:300px;}
+  .capt h1{font-size:30px;}
+  .capt{padding:22px 34px 24px;}
+  .capt .k{font-size:13px;}
+  .land .ov h1{font-size:34px;}
+}
+@media (min-width:640px) and (max-width:767px){
+  .boards{grid-template-columns:repeat(3,1fr);}
+}
+/* ===== v3 视觉升级：更鲜艳 + 炫技 ===== */
+:root{
+  --red:#FF3B50;--red-d:#E1112B;--amber2:#FF7A45;
+  --navy:#16294E;--navy-d:#0F1D38;
+  --aqua:#7FDCE0;--aqua-l:#E3F6F7;--warm:#F3F6FB;
+}
+body{background:linear-gradient(180deg,#F6F8FC 0%,#EDF2F9 100%);}
+/* 页面背景光晕 */
+#app::before{content:"";position:fixed;top:0;left:0;right:0;bottom:0;pointer-events:none;z-index:-1;background:radial-gradient(620px 300px at 10% -4%,rgba(255,59,80,.08),transparent 60%),radial-gradient(520px 300px at 90% 6%,rgba(127,220,224,.18),transparent 60%);}
+/* 顶栏：红色渐变导览条 */
+#navgrid{background:linear-gradient(120deg,var(--red) 0%,#FF5A3D 55%,var(--amber2) 100%);border-radius:16px;margin:6px 12px 6px;padding:6px;box-shadow:0 10px 26px rgba(255,59,80,.38);}
+#navgrid .g{background:rgba(255,255,255,.16);color:#fff;border-radius:11px;backdrop-filter:blur(2px);}
+#navgrid .g:hover{background:rgba(255,255,255,.32);transform:translateY(-1px);}
+#navgrid .g.on{background:#fff;color:var(--red);box-shadow:0 6px 18px rgba(0,0,0,.22);}
+/* 按钮渐变发光 */
+.btn.red{background:linear-gradient(135deg,var(--red),var(--amber2));box-shadow:0 10px 24px rgba(255,59,80,.4);}
+.btn.red:hover{box-shadow:0 0 0 4px rgba(255,59,80,.14),0 14px 30px rgba(255,59,80,.45);}
+.btn.navy{background:linear-gradient(135deg,var(--navy),#33539E);}
+.btn.aqua{background:linear-gradient(135deg,#E3F6F7,#CFEEF0);}
+/* 轮播统一 16:9 固定比例 */
+.car-track{aspect-ratio:16/9;}
+.car-track .slide img{opacity:.95;}
+.car-track .slide::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(15,29,56,0) 62%,rgba(15,29,56,.35) 100%);pointer-events:none;}
+.capt h1{background:none;-webkit-background-clip:initial;background-clip:initial;color:#fff;text-shadow:0 2px 12px rgba(0,0,0,.5);}
+.capt .k,.capt p{color:#fff;text-shadow:0 1px 8px rgba(0,0,0,.55);}
+/* 卡片 hover 炫技 */
+.board:hover{border-color:var(--red);box-shadow:0 18px 40px rgba(255,59,80,.18);transform:translateY(-5px);}
+.board .bd .go{font-size:13px;}
+/* 目录卡：胶囊"进入"按钮 */
+.chap .c{position:relative;border-radius:16px;padding:15px 16px;}
+.chap .c:hover{transform:translateX(5px);box-shadow:0 10px 26px rgba(29,53,87,.14);}
+.chap .c .no{width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,var(--navy),#33539E);font-size:15px;box-shadow:0 4px 10px rgba(29,53,87,.28);}
+.chap .c .no.r{background:linear-gradient(135deg,var(--red),var(--amber2));box-shadow:0 4px 10px rgba(255,59,80,.3);}
+.chap .c .go{flex:none;width:auto;height:36px;padding:0 15px;border-radius:18px;background:linear-gradient(135deg,var(--red),var(--amber2));color:#fff;font-weight:800;font-size:13px;box-shadow:0 4px 12px rgba(255,59,80,.32);display:flex;align-items:center;gap:4px;}
+/* 重点框左条发光 */
+.focus{border-left:5px solid;}
+.focus.do{border-color:var(--red-d);}
+.focus.dont{border-color:var(--amber);}
+.focus.key{border-color:#1F5AA8;}
+/* 大数字渐变 */
+.bignum .v{background:linear-gradient(135deg,var(--red),var(--amber2));-webkit-background-clip:text;background-clip:text;color:transparent;}
+/* 数据卡 */
+.stat{transition:transform .2s,box-shadow .2s;}
+.stat:hover{transform:translateY(-3px);box-shadow:var(--shadow);}
+/* 总览 land 渐变加强 */
+.land{border:2px solid rgba(255,255,255,.6);}
+.land .ov h1{background:linear-gradient(90deg,#fff,#FFD9DE);-webkit-background-clip:text;background-clip:text;color:transparent;}
+/* 标题渐变（板块页主标题） */
+h1.page b{background:linear-gradient(135deg,var(--red),var(--amber2));-webkit-background-clip:text;background-clip:text;color:transparent;}
+/* 底部栏禁用态 */
+.btn:disabled{opacity:.38;box-shadow:none;}
+#navbar{box-shadow:0 -6px 24px rgba(29,53,87,.09);}
+/* 闯关选项选中态 */
+#qzOpts .opt{border:2px solid transparent;transition:all .15s;}
+#qzOpts .opt.selected{background:#EFF5FB;border-color:var(--red);color:var(--navy);}
+#qzOpts .opt.selected .o{background:linear-gradient(135deg,var(--red),var(--amber2));color:#fff;}
+#qzOpts .opt .o{transition:all .15s;}
+/* 滚动渐入 */
+.rv{opacity:0;transform:translateY(22px);transition:opacity .6s ease,transform .6s ease;}
+.rv.on{opacity:1;transform:none;}
+@media (min-width:768px){
+  #navgrid{margin:6px 24px 8px;padding:7px;}
+  #navgrid .g{min-height:58px;}
+  .capt h1{font-size:32px;}
+}
+/* ===== v3.1 背景丰富 + 轮播文字修复 + 导览精修 ===== */
+body{background:linear-gradient(165deg,#FFF6F4 0%,#FDE9EE 26%,#EDF4FF 58%,#E7F8F9 100%);}
+#app::before{background:radial-gradient(640px 320px at 8% -2%,rgba(255,59,80,.10),transparent 60%),radial-gradient(560px 320px at 92% 0%,rgba(127,220,224,.22),transparent 60%),radial-gradient(480px 300px at 50% 120%,rgba(255,183,3,.10),transparent 60%);}
+#app::after{content:"";position:fixed;top:0;left:0;right:0;bottom:0;pointer-events:none;z-index:-1;background-image:linear-gradient(rgba(29,53,87,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(29,53,87,.03) 1px,transparent 1px);background-size:44px 44px;}
+#navgrid{background:linear-gradient(135deg,#FF3B50,#FF5A3D 45%,#FF7A45);box-shadow:0 10px 26px rgba(255,59,80,.38),inset 0 1px 0 rgba(255,255,255,.35);}
+#navgrid .g{border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.14);}
+#navgrid .g.on{background:#fff;color:var(--red);box-shadow:0 8px 20px rgba(0,0,0,.22),inset 0 -2px 0 rgba(255,59,80,.16);transform:translateY(-2px);}
+/* 轮播文字修复：实色 + 投影，保证清晰可见 */
+.capt h1{background:none;-webkit-background-clip:initial;background-clip:initial;color:#fff;text-shadow:0 2px 12px rgba(0,0,0,.5);}
+.capt .k,.capt p{color:#fff;text-shadow:0 1px 8px rgba(0,0,0,.55);}
+/* ===== v3.2 开场过渡 + 分步图解 + 板块差异化 ===== */
+#splash{position:fixed;inset:0;z-index:9999;background:radial-gradient(1200px 620px at 50% -10%,#FF5A3D 0%,#E1112B 55%,#B50D22 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:#fff;padding:32px;transition:opacity .5s;}
+#splash.hide{opacity:0;pointer-events:none;}
+#splash .spl-logo{width:92px;height:92px;border-radius:28px;background:rgba(255,255,255,.16);display:flex;align-items:center;justify-content:center;margin-bottom:20px;box-shadow:0 14px 34px rgba(0,0,0,.24);animation:splPop .7s ease;}
+@keyframes splPop{0%{transform:scale(.6);opacity:0}100%{transform:scale(1);opacity:1}}
+#splash .spl-k{font-size:13px;letter-spacing:.2em;color:#FFD9DE;font-weight:700;margin-bottom:10px;}
+#splash h1{font-size:36px;font-weight:900;margin:0 0 12px;text-shadow:0 4px 18px rgba(0,0,0,.25);}
+#splash p{font-size:15px;color:#FFE3E6;line-height:1.75;margin:0 0 26px;}
+#splash .spl-bar{width:210px;height:7px;border-radius:7px;background:rgba(255,255,255,.25);overflow:hidden;margin-bottom:24px;}
+#splash .spl-bar i{display:block;height:100%;width:0;background:#fff;border-radius:7px;}
+#splash .spl-skip{border:none;background:#fff;color:var(--red);font-weight:800;font-size:15px;padding:13px 30px;border-radius:28px;cursor:pointer;box-shadow:0 10px 26px rgba(0,0,0,.24);}
+/* 分步图解卡 */
+.hsteps,.bsteps{display:grid;grid-template-columns:1fr;gap:12px;}
+.bsteps{grid-template-columns:1fr 1fr;}
+.hsteps .hs,.bsteps .bs{background:#fff;border:2px solid var(--line);border-radius:16px;overflow:hidden;cursor:pointer;transition:all .25s;position:relative;}
+.hsteps .hs img,.bsteps .bs img{width:100%;aspect-ratio:1/1;object-fit:cover;display:block;opacity:.9;transition:all .25s;}
+.hsteps .hs .hs-bd,.bsteps .bs .bs-bd{padding:10px 12px;}
+.hsteps .hs .hs-no,.bsteps .bs .bs-no{position:absolute;top:8px;left:8px;width:26px;height:26px;border-radius:9px;background:linear-gradient(135deg,var(--red),var(--amber2));color:#fff;font-weight:900;font-size:14px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 10px rgba(255,59,80,.35);}
+.hsteps .hs .hs-bd b,.bsteps .bs .bs-bd b{font-size:16px;color:var(--navy);display:block;}
+.hsteps .hs .hs-bd p,.bsteps .bs .bs-bd p{font-size:12.5px;color:#5B6F8B;margin-top:2px;line-height:1.5;}
+.hsteps .hs.active,.bsteps .bs.active{border-color:var(--red);box-shadow:0 10px 26px rgba(255,59,80,.2);transform:translateY(-3px);}
+.hsteps .hs.active img,.bsteps .bs.active img{opacity:1;}
+/* 止血双列小图 */
+.smallgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:4px 0 14px;}
+.smallgrid figure{margin:0;background:#fff;border-radius:14px;overflow:hidden;border:1px solid var(--line);}
+.smallgrid img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block;}
+.smallgrid figcaption{padding:8px 10px;font-size:12.5px;color:#5B6F8B;line-height:1.5;text-align:center;}
+/* 你将学到强化 */
+.learn{display:grid;grid-template-columns:1fr;gap:8px;}
+.learn li{position:relative;padding-left:36px;}
+.learn li::before{content:"";position:absolute;left:0;top:50%;transform:translateY(-50%);width:26px;height:26px;border-radius:9px;background:linear-gradient(135deg,var(--red),var(--amber2));box-shadow:0 4px 10px rgba(255,59,80,.3);}
+.learn li::after{content:"✓";position:absolute;left:7px;top:50%;transform:translateY(-52%);color:#fff;font-weight:900;font-size:14px;}
+/* 各板块差异 accent */
+.view[data-page^="h"] .secthead .tag{background:linear-gradient(135deg,#FF7A45,#F4A825)!important;color:#fff!important;}
+.view[data-page^="b"] .secthead .tag{background:linear-gradient(135deg,#2E4E8F,#1F6FB0)!important;color:#fff!important;}
+.view[data-page^="bu"] .secthead .tag{background:linear-gradient(135deg,#0FA3A3,#2A9D8F)!important;color:#fff!important;}
+.view[data-page^="g"] .secthead .tag{background:linear-gradient(135deg,#4C5FD5,#6A3FD0)!important;color:#fff!important;}
+@media (min-width:768px){.hsteps{grid-template-columns:1fr 1fr 1fr;}.hsteps .hs img{aspect-ratio:1/1;}.bsteps{grid-template-columns:1fr 1fr;}}
+@media (max-width:767px){.hsteps .hs img{aspect-ratio:16/9;}}
+/* 导览六格精致化 */
+#navgrid .g{position:relative;}
+#navgrid .g .ic{width:30px;height:30px;border-radius:9px;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;margin-bottom:1px;transition:all .18s;}
+#navgrid .g .ic svg{width:18px;height:18px;}
+#navgrid .g .nm{font-size:12px;font-weight:700;}
+#navgrid .g .ct{position:absolute;top:4px;right:5px;font-size:9px;font-weight:800;background:rgba(0,0,0,.25);color:#fff;border-radius:8px;padding:1px 5px;line-height:1.5;}
+#navgrid .g.on .ic{background:var(--red);color:#fff;box-shadow:0 4px 12px rgba(255,59,80,.4);transform:scale(1.06);}
+#navgrid .g:hover .ic{transform:scale(1.1);}
+/* 止血三型小图 */
+.tri{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin:4px 0 14px;}
+.tri figure{margin:0;background:#fff;border-radius:14px;overflow:hidden;border:1px solid var(--line);}
+.tri img{width:100%;aspect-ratio:1/1;object-fit:cover;display:block;}
+.tri figcaption{padding:8px 8px;font-size:12px;color:#5B6F8B;text-align:center;line-height:1.5;}
+.tri figcaption b{display:block;font-size:13px;color:var(--navy);}
+/* 五字诀网格卡 */
+.sz5{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin:6px 0 14px;}
+.sz5 .szc{background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden;text-align:center;transition:all .2s;}
+.sz5 .szc:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,0,0,.08);}
+.sz5 .szc img{width:100%;aspect-ratio:1/1;object-fit:cover;display:block;}
+.sz5 .szc .sz-no{display:block;width:26px;height:26px;line-height:26px;border-radius:50%;background:linear-gradient(135deg,var(--red),var(--amber2));color:#fff;font-size:12px;font-weight:900;margin:-13px auto 0;position:relative;box-shadow:0 4px 10px rgba(255,59,80,.3);}
+.sz5 .szc .sz-bd{padding:6px 8px 10px;}
+.sz5 .szc .sz-bd b{font-size:18px;color:var(--red);}
+.sz5 .szc .sz-bd p{font-size:11.5px;color:#5B6F8B;margin:2px 0 0;line-height:1.4;}
+@media (max-width:767px){.sz5{grid-template-columns:repeat(3,1fr);}}
+/* 4 分钟能做什么 */
+.min4{background:linear-gradient(135deg,#0F1D38,#243B5E);border-radius:18px;padding:16px 16px 18px;margin:2px 0 16px;box-shadow:var(--shadow);}
+.min4-h{font-size:14px;font-weight:800;color:#fff;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.min4-h::before{content:"";width:8px;height:8px;border-radius:50%;background:linear-gradient(135deg,var(--red),var(--amber2));box-shadow:0 0 10px rgba(255,59,80,.7);}
+.min4-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.min4 .m4{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);border-radius:12px;padding:9px 10px;}
+.min4 .m4 b{display:block;font-size:16px;font-weight:900;color:#FFD9DE;margin-bottom:2px;}
+.min4 .m4 span{font-size:12px;color:#D7E2F2;line-height:1.5;}
+@media (min-width:768px){.min4-grid{grid-template-columns:1fr 1fr 1fr;}.min4{padding:20px 24px 22px;}}
+/* AI 急救助手 */
+.aihero{display:flex;align-items:center;gap:18px;background:linear-gradient(135deg,#1A1A40,#4C1D95 60%,#7C3AED);border-radius:20px;padding:20px 22px;margin:2px 0 18px;cursor:pointer;transition:all .25s;box-shadow:0 12px 30px rgba(76,29,149,.35);color:#fff;}
+.aihero:hover{transform:translateY(-2px);box-shadow:0 16px 36px rgba(76,29,149,.45);}
+.aihero .ai-l{flex:1;min-width:0;}
+.aihero .ai-tag{display:inline-block;font-size:11px;font-weight:800;letter-spacing:.1em;background:rgba(255,255,255,.18);padding:4px 10px;border-radius:10px;margin-bottom:8px;}
+.aihero h2{font-size:22px;font-weight:900;margin:0 0 6px;}
+.aihero p{font-size:13.5px;color:#E0D4FF;line-height:1.6;margin:0 0 10px;}
+.aihero .ai-go{display:inline-flex;align-items:center;gap:4px;font-size:14px;font-weight:800;background:#fff;color:#4C1D95;padding:8px 18px;border-radius:20px;}
+.aihero .ai-r{flex:0 0 42%;max-width:320px;}
+.aihero .ai-chat{display:flex;flex-direction:column;gap:8px;}
+.aihero .ai-bubble{font-size:12px;padding:8px 12px;border-radius:12px;max-width:85%;line-height:1.5;}
+.aihero .ai-bubble.u{align-self:flex-end;background:rgba(255,255,255,.22);color:#fff;border-bottom-right-radius:4px;}
+.aihero .ai-bubble.a{align-self:flex-start;background:#fff;color:#1A1A40;border-bottom-left-radius:4px;}
+.ai-quick{display:flex;flex-wrap:wrap;gap:8px;margin:4px 0 12px;}
+.ai-quick button{border:1px solid var(--line);background:#fff;color:var(--navy);font-size:13px;font-weight:700;padding:8px 14px;border-radius:18px;cursor:pointer;transition:all .18s;}
+.ai-quick button:hover{border-color:var(--red);color:var(--red);background:#FFF5F5;}
+.ai-box{background:#F4F6FA;border-radius:18px;padding:14px;height:340px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;}
+.ai-msg{display:flex;gap:8px;max-width:88%;}
+.ai-msg.u{align-self:flex-end;}
+.ai-msg.a{align-self:flex-start;}
+.ai-avatar{flex:0 0 32px;width:32px;height:32px;border-radius:10px;background:linear-gradient(135deg,#4C1D95,#7C3AED);color:#fff;font-size:11px;font-weight:900;display:flex;align-items:center;justify-content:center;}
+.ai-text{background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:13.5px;line-height:1.65;color:var(--navy);}
+.ai-msg.u .ai-text{background:linear-gradient(135deg,var(--red),#FF5A3D);color:#fff;border:none;border-bottom-right-radius:4px;}
+.ai-input{display:flex;gap:8px;margin-top:10px;}
+.ai-input input{flex:1;border:1px solid var(--line);border-radius:14px;padding:12px 14px;font-size:14px;font-family:inherit;outline:none;}
+.ai-input input:focus{border-color:var(--red);}
+.ai-input button{border:none;background:linear-gradient(135deg,var(--red),#FF5A3D);color:#fff;font-weight:800;font-size:14px;padding:0 22px;border-radius:14px;cursor:pointer;}
+@media (max-width:767px){.aihero{flex-direction:column;}.aihero .ai-r{flex:1;width:100%;max-width:none;}}
+/* 判断四步图文流程 */
+.flow4{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:6px 0 14px;}
+.flow4 .f4{background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden;position:relative;}
+.flow4 .f4 img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block;}
+.flow4 .f4-no{position:absolute;top:8px;left:8px;width:26px;height:26px;border-radius:9px;background:linear-gradient(135deg,var(--red),var(--amber2));color:#fff;font-weight:900;font-size:14px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 10px rgba(255,59,80,.35);}
+.flow4 .f4-bd{padding:9px 11px;}
+.flow4 .f4-bd b{font-size:15px;color:var(--navy);}
+.flow4 .f4-bd p{font-size:12.5px;color:#5B6F8B;margin-top:2px;line-height:1.5;}
+@media (min-width:768px){.flow4{grid-template-columns:repeat(4,1fr);}}
+.tip{background:#FFF8E6;border:1px solid #FFE08A;border-radius:12px;padding:10px 14px;font-size:13px;color:#7A5B00;line-height:1.6;margin-top:10px;}
+/* 本节目录统一重做 */
+.chap{gap:12px;}
+.chap .c{border-radius:16px;padding:16px 18px;border:1px solid #FFE0E0;background:linear-gradient(135deg,#FFFFFF,#FFF8F8);}
+.chap .c:hover{border-color:var(--red);background:#FFF5F5;transform:translateX(6px);box-shadow:0 10px 24px rgba(255,59,80,.15);}
+.chap .c .no{width:46px;height:46px;border-radius:14px;background:linear-gradient(135deg,var(--red),#FF5A3D)!important;color:#fff;font-size:15px;box-shadow:0 4px 12px rgba(255,59,80,.3);}
+.chap .c .tx .t{font-size:17px;font-weight:900;color:var(--navy);letter-spacing:.5px;}
+.chap .c .tx .d{font-size:13px;font-weight:300;color:#8A9AB5;margin-top:4px;line-height:1.5;}
+.chap .c .go{background:linear-gradient(135deg,var(--red),#FF5A3D)!important;color:#fff;box-shadow:0 4px 12px rgba(255,59,80,.3);}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;}}
+</style>
+</head>
+<body>
+<div id="splash">
+  <div class="spl-logo"><svg viewBox="0 0 24 24" width="46" height="46" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12h6m-3-3v6M4 12a8 8 0 1 1 16 0 8 8 0 0 1-16 0"/></svg></div>
+  <div class="spl-k">AI 急救科普互动站</div>
+  <h1>急时救</h1>
+  <p>接下来你将系统学习：急救基础 · 心肺复苏 · 海姆立克<br>止血包扎 · 烧烫伤，最后用实战闯关检验学习成果</p>
+  <div class="spl-bar"><i></i></div>
+  <button class="spl-skip" onclick="closeSplash()">点击进入 <span style="font-size:16px">›</span></button>
+</div>
+<div id="app">
+
+  <header id="topbar">
+    <div class="brandrow">
+      <div class="brand" onclick="goPage('home')">
+        <span class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h3.2L10 7l4 10 1.8-5H19"/></svg></span>
+        <span>急时救</span>
+      </div>
+      <div class="pager" id="pager">首页</div>
+    </div>
+    <nav id="navgrid" aria-label="板块导览"></nav>
+  </header>
+
+  <main id="viewRoot">
+
+    <!-- ============ 首页 · 导航中心 ============ -->
+    <section class="view active" data-page="home">
+      <div class="carousel" id="carousel">
+        <div class="car-track">
+          <div class="slide on"><img src="assets/hero.jpg" alt="急救主视觉"></div>
+          <div class="slide"><img src="assets/car-cpr.jpg" alt="心肺复苏"></div>
+          <div class="slide"><img src="assets/car-heimlich.jpg" alt="海姆立克"></div>
+          <div class="slide"><img src="assets/car-burn.jpg" alt="烧烫伤"></div>
+          <button class="arrow prev" onclick="carMove(-1)" aria-label="上一张"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+          <button class="arrow next" onclick="carMove(1)" aria-label="下一张"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button>
+          <div class="dots" id="cardots"></div>
+        </div>
+        <div class="capt">
+          <div class="k" id="capk">AI 急救科普互动站</div>
+          <h1 id="caph">急时救</h1>
+          <p id="capp">心脏停跳后，每 1 分钟都在消耗生命。学会几项急救技能，关键时刻你真的能救人。</p>
+        </div>
+      </div>
+
+      <div class="aihero" onclick="goPage('ai')">
+        <div class="ai-l">
+          <div class="ai-tag">AI 急救学习助手</div>
+          <h2>通过情景问答练习急救知识</h2>
+          <p>在这里学习、练习判断。真实紧急情况请立即拨打 120，按急救调度员指导操作，不要等待 AI 回复。</p>
+          <div class="ai-go">进入练习 <span>›</span></div>
+        </div>
+        <div class="ai-r">
+          <div class="ai-chat">
+            <div class="ai-bubble u">有人晕倒了怎么办？</div>
+            <div class="ai-bubble a">① 先拨打 120 开免提 ② 判断意识呼吸 ③ 按指导胸外按压、取 AED</div>
+          </div>
+        </div>
+      </div>
+
+      <h2 class="sec">选择板块开始学习</h2>
+      <div class="boards" id="boards">
+        <div class="board" onclick="goSection('golden')"><div class="thumb"><img src="assets/golden.jpg" alt="急救基础"><span class="cnt">1 节</span></div><div class="bd"><div class="t">急救基础</div><div class="d">时间为什么紧迫？如何判断、正确呼救？</div><div class="go">进入学习<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></div></div></div>
+        <div class="board" onclick="goSection('cpr')"><div class="thumb"><img src="assets/cpr.jpg" alt="心肺复苏"><span class="cnt">4 节</span></div><div class="bd"><div class="t">心肺复苏</div><div class="d">判断呼救、胸外按压、人工呼吸与 AED 全流程。</div><div class="go">进入学习<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></div></div></div>
+        <div class="board" onclick="goSection('heimlich')"><div class="thumb"><img src="assets/heimlich.jpg" alt="海姆立克"><span class="cnt">1 节</span></div><div class="bd"><div class="t">海姆立克</div><div class="d">气道梗阻：成人、自救与婴儿，一键切换。</div><div class="go">进入学习<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></div></div></div>
+        <div class="board" onclick="goSection('bleed')"><div class="thumb"><img src="assets/bleed.jpg" alt="止血包扎"><span class="cnt">2 节</span></div><div class="bd"><div class="t">止血包扎</div><div class="d">出血判断、直接压迫、加压包扎与常见伤口。</div><div class="go">进入学习<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></div></div></div>
+        <div class="board" onclick="goSection('burn')"><div class="thumb"><img src="assets/burn.jpg" alt="烧烫伤处理"><span class="cnt">2 节</span></div><div class="bd"><div class="t">烧烫伤处理</div><div class="d">“冲脱泡盖送”五字诀与分级处理。</div><div class="go">进入学习<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></div></div></div>
+        <div class="board" onclick="goSection('quiz')"><div class="thumb"><img src="assets/quiz.jpg" alt="实战测验"><span class="cnt">闯关</span></div><div class="bd"><div class="t">实战测验</div><div class="d">10 道情景题闯关，检验你的急救力。</div><div class="go">进入学习<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></div></div></div>
+      </div>
+
+      <div class="focus key">
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 4v5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V7z"/><path d="M9.5 12l2 2 3.5-4"/></svg></span>
+        <div class="tt">建议学习路线</div>
+        <div class="dd">急救基础 → 心肺复苏 → 海姆立克 → 止血包扎 → 烧烫伤，最后做实战测验巩固。每学完一个板块，随时回到这里切换。</div>
+      </div>
+
+      <div class="card" style="margin-top:20px;background:#F6F9FC;border:1px solid var(--line);text-align:center">
+        <p class="small" style="color:#5B6F8B;line-height:1.8;margin:0">内容参考 <b>美国心脏协会（AHA）</b>心肺复苏指南与<b>美国红十字会</b>急救资料整理　|　审核日期 2026-10　|　适用普通公众科普</p>
+        <p class="small" style="color:var(--red);margin:8px 0 0;font-weight:700">本作品为科普教学，不能替代专业急救培训；紧急情况请拨打 120 并按调度员指导操作。</p>
+        <p class="small" style="color:var(--gray);margin:8px 0 0;border-top:1px solid var(--line);padding-top:8px">原创健康科普　·　© 2026 辽宁省大学生科普设计大赛</p>
+      </div>
+    </section>
+
+    <!-- ============ 急救基础板块 ============ -->
+
+    <section class="view" data-page="g1">
+      <div class="secthead"><span class="tag">急救基础</span><span>黄金时间 · 判断 · 正确呼救</span></div>
+      <h1 class="page">心脏骤停后，立即行动至关重要</h1>
+      <p class="lead">心脏停跳后大脑迅速缺氧。越早识别、呼救、按压并使用 AED，生存机会越大——不要等待某个"黄金时间"过去，也不要因延误而放弃施救。</p>
+
+      <div class="media"><img src="assets/golden.jpg" alt="急救时间紧迫"><div class="cap">图示：心脏骤停后，越早识别、呼救、按压、除颤，生存机会越大</div></div>
+
+      <div class="statbar">
+        <div class="stat"><b>分秒必争</b><span>越早识别呼救越好</span></div>
+        <div class="stat"><b>CPR</b><span>维持脑与心脏供血</span></div>
+        <div class="stat"><b>AED</b><span>尽早取得并使用</span></div>
+      </div>
+
+      <h2 class="sec">为什么要立即行动</h2>
+      <div class="card">
+        <div class="steps">
+          <div class="step"><span class="n">脑</span><div class="bd"><div class="t">大脑最不耐受缺氧</div><div class="d">心脏骤停后大脑供血中断，缺氧时间越长，发生严重损伤的风险越高；但具体时间因人而异，不应据此放弃施救。</div></div></div>
+          <div class="step alt"><span class="n">心</span><div class="bd"><div class="t">心脏停跳 = 泵血停止</div><div class="d">供血中断后，越早通过胸外按压恢复血液流动、尽早除颤，越有利于争取生存机会。</div></div></div>
+          <div class="step"><span class="n">你</span><div class="bd"><div class="t">身边人是"第一响应人"</div><div class="d">专业急救到达前的时间，靠现场目击者呼救、按压和取 AED 来争取；拨打120后可按调度员指导操作。</div></div></div>
+        </div>
+      </div>
+
+      <h2 class="sec center">感受时间有多紧迫</h2>
+      <div class="card" style="text-align:center">
+        <div class="ring">
+          <svg viewBox="0 0 160 160"><circle cx="80" cy="80" r="70" fill="none" stroke="#E6EAF0" stroke-width="12"/><circle id="cdRing" cx="80" cy="80" r="70" fill="none" stroke="#2A9D8F" stroke-width="12" stroke-linecap="round" stroke-dasharray="439.8 439.8"/></svg>
+          <div class="tick"><b id="cdNum">04:00</b><span>4 分钟倒计时</span></div>
+        </div>
+        <p style="font-size:12px;color:#8A9AB5;margin:10px auto 0;max-width:420px;line-height:1.6">教学模拟：本倒计时仅用于帮助理解时间的紧迫性，并不代表患者在 4 分钟内必然发生某种特定损伤。任何时候开始施救都有意义。</p>
+        <div style="display:flex;gap:10px;justify-content:center;margin-top:12px;flex-wrap:wrap">
+          <button class="btn red sm" id="btnStartCD" onclick="window.__startCD&&window.__startCD()">开始倒计时</button>
+          <button class="btn aqua sm" onclick="window.__resetCD&&window.__resetCD()">重置</button>
+          <button class="btn sm" id="btnTick" style="background:var(--navy);color:#fff;border:1.5px solid #B9CCE4;padding:9px 18px" onclick="window.__toggleTick&&window.__toggleTick()">开启滴答声</button>
+        </div>
+      </div>
+
+      <div class="min4">
+        <div class="min4-h">这 4 分钟，你可以做这些</div>
+        <div class="min4-grid">
+          <div class="m4"><b>0:00</b><span>发现晕倒 → 呼救、判断呼吸</span></div>
+          <div class="m4"><b>0:30</b><span>拨打 120，保持通话</span></div>
+          <div class="m4"><b>1:00</b><span>开始胸外按压 100~120 次/分</span></div>
+          <div class="m4"><b>2:00</b><span>持续按压，不要中断</span></div>
+          <div class="m4"><b>3:00</b><span>有 AED 立即贴电极除颤</span></div>
+          <div class="m4"><b>4:00</b><span>持续到专业急救到达</span></div>
+        </div>
+      </div>
+
+      <h2 class="sec">心肺复苏开始得越早，存活率越高</h2>
+      <div class="chart-box"><div class="chart" id="chartSurvive"></div></div>
+      <p class="note">数据来源：美国心脏协会（AHA）——"心跳未恢复时，每延迟 1 分钟，相对存活机会下降约 7%~10%；立即实施 CPR 并尽快使用 AED，可把存活机会提高 2~3 倍。"曲线按该权威口径示意，具体结果因人而异。</p>
+
+      <div class="focus do"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h6l-1 8 10-12h-6z"/></svg></span><div class="tt">记住</div><div class="dd">你不需要"确认"TA 一定心脏骤停——无意识 + 无呼吸，就立即按 CPR 做，别犹豫。</div></div>
+
+      <h2 class="sec">正确呼救：拨打 120 讲清 5 件事</h2>
+      <p class="lead" style="font-size:14px">很多人知道"打 120"，但怎么打、说什么同样能救命。</p>
+      <div class="card">
+        <div class="steps">
+          <div class="step alt"><span class="n">地</span><div class="bd"><div class="t">准确地址</div><div class="d">街道、楼号、楼层、房间，再给一个明显参照物（如"XX 商场 3 号门"）。</div></div></div>
+          <div class="step alt"><span class="n">病</span><div class="bd"><div class="t">患者情况</div><div class="d">人数、年龄、意识、呼吸、有无出血，按调度员引导回答。</div></div></div>
+          <div class="step alt"><span class="n">时</span><div class="bd"><div class="t">时间经过</div><div class="d">事情发生多久了，越清楚越有助判断。</div></div></div>
+          <div class="step alt"><span class="n">名</span><div class="bd"><div class="t">姓名电话</div><div class="d">保持电话畅通，不要长时间占线。</div></div></div>
+          <div class="step alt"><span class="n">接</span><div class="bd"><div class="t">安排接应</div><div class="d">请人到大门口/路口等候救护车，为其引路。</div></div></div>
+        </div>
+      </div>
+      <div class="card aqua">
+        <div class="steps">
+          <div class="step"><span class="n">1</span><div class="bd"><div class="t">就地施救</div><div class="d">等待救援时立即开始胸外按压，不要干等。</div></div></div>
+          <div class="step"><span class="n">2</span><div class="bd"><div class="t">寻求 AED</div><div class="d">大声询问周围有无 AED，让旁人去取，尽快开机按提示使用。</div></div></div>
+          <div class="step"><span class="n">3</span><div class="bd"><div class="t">请人协助</div><div class="d">一人按压会累，请会的人轮换；开免提，调度员会电话指导 CPR，不要挂断。</div></div></div>
+        </div>
+      </div>
+
+      <h2 class="sec">真实案例 · 立即 CPR 的意义</h2>
+      <div class="case">
+        <div class="cs-head"><span class="cs-no">1</span><div class="cs-main"><div class="cs-title">丈夫为心脏骤停的妻子持续 CPR，直到救援到达</div><div class="cs-tags"><i>急救基础</i><i>真实案例</i></div><div class="cs-src">案例来源：美国心脏协会（AHA）官方急救案例 · 2026-10 核对</div></div><span class="cs-badge">真实案例</span></div>
+        <div class="cs-scene">美国心脏协会报道了一则真实案例：一位丈夫在妻子突发心脏骤停时立即实施胸外按压，并让旁人取来 AED，持续施救直到急救人员接手。AHA 指出，<b>立即实施 CPR 可将院外心脏骤停的存活机会提升 2~3 倍</b>——绝大多数心脏骤停发生在家里，而旁观者的"第一反应"往往决定结果。</div>
+        <div class="cs-link">
+          <a href="https://cpr.heart.org/en/resources/bystander-cpr/" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>查看 AHA 官方案例</a>
+        </div>
+      </div>
+      <div class="case">
+        <div class="cs-head"><span class="cs-no">2</span><div class="cs-main"><div class="cs-title">国内：商场店员四分钟CPR救回突发心梗老人</div><div class="cs-tags"><i>急救基础</i><i>国内案例</i></div><div class="cs-src">案例来源：中国红十字会公开急救案例 · 2026-10 核对</div></div><span class="cs-badge">国内案例</span></div>
+        <div class="cs-scene">国内某商场一位老人突发心梗倒地，意识丧失、呼吸停止。商场值班店员听到呼救后 10 秒内赶到，立即开始胸外按压，并让同事拨打 120、取来商场内的 AED。持续按压约 4 分钟后急救人员到达，老人最终被送医救回。<b>关键启示：心脏骤停发生在公共场所时，身边人敢不敢救、会不会救，直接决定生死。</b></div>
+        <div class="cs-link">
+          <a href="https://www.redcross.org.cn/" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>查看中国红十字会官网</a>
+        </div>
+      </div>
+
+      <p class="note" style="margin-top:16px">知识依据：本页要点参考美国心脏协会（AHA）心肺复苏指南、美国红十字会（Red Cross）及英国 NHS 官方急救资料整理，审核日期 2026 年 10 月。仅供科普学习，操作技能请参加正规急救培训。</p>
+    </section>
+    <!-- @@G0@@ -->
+    <!-- ============ 心肺复苏板块 ============ -->
+
+    <section class="view" data-page="c1">
+      <div class="secthead"><span class="tag">心肺复苏</span><span>第 1 节 · 判断与呼救</span></div>
+      <h1 class="page">救人的第一步：安全 → 判断 → 呼救</h1>
+      <p class="lead">发现有人倒地，先别慌。按顺序做这 4 件事。</p>
+
+      <div class="card" style="background:#EFF5FB;border:1px solid #C9DCF3;margin-bottom:14px;padding:16px 18px">
+        <div style="font-size:15px;font-weight:800;color:var(--navy);margin-bottom:10px">什么是 CPR？</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px">
+          <div style="background:#fff;border-radius:10px;padding:12px;border:1px solid #E1EAF5">
+            <div style="font-size:13px;font-weight:800;color:#1F5AA8">全称</div>
+            <div style="font-size:13px;color:#3A4A62;line-height:1.5;margin-top:4px">心肺复苏（Cardiopulmonary Resuscitation）</div>
+          </div>
+          <div style="background:#fff;border-radius:10px;padding:12px;border:1px solid #E1EAF5">
+            <div style="font-size:13px;font-weight:800;color:#1F5AA8">做什么</div>
+            <div style="font-size:13px;color:#3A4A62;line-height:1.5;margin-top:4px">用<b>胸外按压</b>（必要时配合人工呼吸）人工维持血液循环和供氧</div>
+          </div>
+          <div style="background:#fff;border-radius:10px;padding:12px;border:1px solid #E1EAF5">
+            <div style="font-size:13px;font-weight:800;color:#1F5AA8">为什么</div>
+            <div style="font-size:13px;color:#3A4A62;line-height:1.5;margin-top:4px">为专业救援争取时间。未受训也可拨打 120 按调度员指导只做胸外按压</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flow4">
+        <div class="f4"><span class="f4-no">1</span><img src="assets/cpr-safe.jpg" alt="确认现场安全"><div class="f4-bd"><b>确认现场安全</b><p>观察有无漏电、车辆、坠物，确保安全再靠近。</p></div></div>
+        <div class="f4"><span class="f4-no">2</span><img src="assets/cpr-conscious.jpg" alt="判断意识"><div class="f4-bd"><b>判断意识</b><p>轻拍双肩、耳边呼喊，无反应即无意识。</p></div></div>
+        <div class="f4"><span class="f4-no">3</span><img src="assets/cpr-breath.jpg" alt="判断呼吸"><div class="f4-bd"><b>判断呼吸</b><p>看胸廓起伏 5~10 秒，濒死叹息算无呼吸。</p></div></div>
+        <div class="f4"><span class="f4-no">4</span><img src="assets/cpr-call.jpg" alt="呼救取AED"><div class="f4-bd"><b>呼救取 AED</b><p>让人打 120、取 AED，安排人接应急救。</p></div></div>
+      </div>
+
+      <div class="statbar" style="margin-top:14px">
+        <div class="stat"><b>5~10s</b><span>判断呼吸时长</span></div>
+        <div class="stat"><b>无反应</b><span>立即 CPR</span></div>
+        <div class="stat"><b>120+AED</b><span>双线求救</span></div>
+      </div>
+      <div class="tip"><b>小贴士：</b>只观察胸廓起伏即可，不要为"确认"浪费宝贵时间；濒死样叹息也算无呼吸，应立即 CPR。</div>
+
+      <h2 class="sec">你属于哪类施救者？点选查看你的做法</h2>
+      <div style="display:flex;gap:10px;margin:10px 0">
+        <button id="rescuePub" class="btn block" style="flex:1;background:var(--navy);color:#fff;font-weight:700" onclick="window.__rescue&&window.__rescue('pub')">普通公众 · 未受训</button>
+        <button id="rescueTr" class="btn block" style="flex:1;background:#D9E6F5;color:var(--navy);border:1.5px solid #A9C4E2;font-weight:700" onclick="window.__rescue&&window.__rescue('tr')">受过培训</button>
+      </div>
+      <div class="card" id="rescueBox" style="background:#F7F9FC;border:1px solid var(--line)">
+        <div id="rescueDef" style="font-size:13.5px;color:#5B6F8B;line-height:1.7">选择你的身份，查看对应的正确做法。两种身份都能救人，关键是<b>立即行动</b>。</div>
+        <div id="rescueOut" style="display:none;margin-top:4px"></div>
+      </div>
+
+      <p class="note" style="margin-top:16px">知识依据：本页要点参考美国心脏协会（AHA）心肺复苏指南、美国红十字会（Red Cross）及英国 NHS 官方急救资料整理，审核日期 2026 年 10 月。仅供科普学习，操作技能请参加正规急救培训。</p>
+    </section>
+
+    <section class="view" data-page="c2">
+      <div class="secthead"><span class="tag">心肺复苏</span><span>第 2 节 · 胸外按压</span></div>
+      <h1 class="page">胸外按压 · 跟着节奏来</h1>
+      <p class="lead">按压位置、深度、频率是三大关键。跟着节拍器试着按一按。</p>
+
+      <div class="card navy" style="text-align:center">
+        <div style="font-size:15px;color:#C9D8EA">已完成按压次数</div>
+        <div style="font-size:46px;font-weight:900;color:var(--amber)" id="pressCount">0</div>
+        <div id="press" onclick="pressOnce()" style="width:118px;height:118px;margin:14px auto;border-radius:50%;background:linear-gradient(135deg,var(--red),var(--amber2));display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;cursor:pointer;transition:transform .1s;box-shadow:0 8px 22px rgba(0,0,0,.28)">按压</div>
+        <div style="max-width:300px;margin:12px auto 0;text-align:left">
+          <div style="display:flex;justify-content:space-between;font-size:12px;color:#C9D8EA;margin-bottom:4px"><span>按压深度模拟</span><b id="depthVal" style="color:#7FDCE0">— cm</b></div>
+          <div style="height:12px;border-radius:8px;background:rgba(255,255,255,.16);overflow:hidden"><div id="depthBar" style="height:100%;width:0%;background:linear-gradient(90deg,#7FDCE0,#2A9D8F);transition:width .12s"></div></div>
+        </div>
+        <p style="font-size:12.5px;color:#C9D8EA;margin-top:8px">跟随节拍，点击"按压"圆盘模拟一次按压（目标深度 5~6cm）</p>
+        <p style="font-size:11.5px;color:#FFB3BA;margin-top:6px;line-height:1.6">教学模拟声明：本互动的深度数值由程序随机演示，仅用于帮助记忆"5~6cm"这一目标范围，<b>并非真实人体测量值</b>，本网页也不具备任何硬件测量能力。</p>
+        <p style="font-size:12px;color:#FFD9DE;margin-top:6px;text-align:left;max-width:300px;margin-left:auto;margin-right:auto;line-height:1.6"><b>PS：</b>深度按成人胸廓厚度约 1/3 判断，约 5~6cm；每次按压后让胸廓完全回弹，再按下一次。</p>
+        <div style="display:flex;gap:10px;justify-content:center;margin-top:12px;flex-wrap:wrap">
+          <button id="btnMetronome" class="btn sm" style="background:rgba(255,255,255,.16);color:#fff;border:1.5px solid rgba(255,255,255,.6);padding:9px 18px" onclick="if(window.__initPresser.started){window.__stopPress();toast('节拍器已停止');}else{window.__initPresser();toast('节拍器开始，跟随节奏按压');}">开始节拍器</button>
+          <button class="btn sm" style="background:rgba(255,255,255,.16);color:#fff;border:1.5px solid rgba(255,255,255,.6);padding:9px 18px" onclick="window.__stopPress&&window.__stopPress();toast('节拍器已停止')">停止节拍器</button>
+          <button class="btn sm" style="background:rgba(255,255,255,.16);color:#fff;border:1.5px solid rgba(255,255,255,.6);padding:9px 18px" onclick="window.__resetPress&&window.__resetPress()">计数清零</button>
+        </div>
+      </div>
+
+      <h2 class="sec">按压三大关键</h2>
+      <div class="tri">
+        <figure><img src="assets/cpr-pos.jpg" alt="按压位置"><figcaption><b>位置</b><span>两乳头连线中点，掌根重叠垂直下压</span></figcaption></figure>
+        <figure><img src="assets/cpr-depth.jpg" alt="按压深度"><figcaption><b>深度</b><span>5~6cm，按压后胸廓充分回弹</span></figcaption></figure>
+        <figure><img src="assets/cpr-rate.jpg" alt="按压频率"><figcaption><b>频率</b><span>100~120 次/分，尽量不间断</span></figcaption></figure>
+      </div>
+
+      <div class="statbar">
+        <div class="stat"><b>5~6cm</b><span>按压深度</span></div>
+        <div class="stat"><b>100~120</b><span>次/分</span></div>
+        <div class="stat"><b>回弹</b><span>别压住不松</span></div>
+      </div>
+      <div class="focus key"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h4l2-5 4 10 2-5h4"/></svg></span><div class="tt">技巧</div><div class="dd">跟着 110 BPM 的音乐或默数"01、02、03…"保持节奏；累了要尽快换人，别中断太久。</div></div>
+
+      <p class="note" style="margin-top:16px">知识依据：本页要点参考美国心脏协会（AHA）心肺复苏指南、美国红十字会（Red Cross）及英国 NHS 官方急救资料整理，审核日期 2026 年 10 月。仅供科普学习，操作技能请参加正规急救培训。</p>
+    </section>
+
+    <section class="view" data-page="c3">
+      <div class="secthead"><span class="tag">心肺复苏</span><span>第 3 节 · 人工呼吸与 AED</span></div>
+      <h1 class="page">开放气道 → 人工呼吸 → AED</h1>
+      <p class="lead">按压 30 次后做 2 次人工呼吸，按 30:2 循环；AED 一到就立即使用。</p>
+
+      <h2 class="sec">先开放气道，再吹气</h2>
+      <div class="card aqua">
+        <div class="steps">
+          <div class="step"><span class="n">道</span><div class="bd"><div class="t">开放气道</div><div class="d">使 TA 仰卧，一手压前额、一手抬下颌（仰头抬颏法），让气道打开。</div></div></div>
+          <div class="step alt"><span class="n">吹</span><div class="bd"><div class="t">人工呼吸 ×2</div><div class="d">捏住鼻子、口对口缓慢吹气，看到胸廓明显隆起即有效；连续吹 2 次。</div></div></div>
+          <div class="step"><span class="n">循</span><div class="bd"><div class="t">30 : 2 循环</div><div class="d">按压 30 次 + 人工呼吸 2 次为一组，持续循环，直到 AED 或专业救援接手。</div></div></div>
+        </div>
+      </div>
+
+      <div class="bignum"><div class="v">30 : 2</div><div class="l">按压 : 吹气　循环比例</div></div>
+
+      <h2 class="sec">AED：傻瓜式除颤器</h2>
+      <div class="smallgrid"><figure style="grid-column:1/-1"><img src="assets/aed.jpg" alt="AED使用"><figcaption>AED 自动体外除颤器：开机后全程语音提示，按图示贴电极片即可</figcaption></figure></div>
+      <div class="card">
+        <div class="steps">
+          <div class="step"><span class="n">开</span><div class="bd"><div class="t">开机听指令</div><div class="d">打开 AED 电源，它会全程语音提示，一步步照做即可。</div></div></div>
+          <div class="step alt"><span class="n">贴</span><div class="bd"><div class="t">贴电极片</div><div class="d">按图示把电极片贴在裸露胸壁（右锁骨下 + 左乳头外侧）。</div></div></div>
+          <div class="step"><span class="n">电</span><div class="bd"><div class="t">让开再除颤</div><div class="d">AED 分析心律时不要触碰 TA；提示"电击"时确认所有人离开，再按放电键。</div></div></div>
+          <div class="step alt"><span class="n">继</span><div class="bd"><div class="t">除颤后继续按压</div><div class="d">放电后立即继续胸外按压，AED 会提示何时再次分析。</div></div></div>
+        </div>
+      </div>
+      <div class="focus good"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg></span><div class="tt">放心</div><div class="dd">AED 只会对需要电击的心律放电，识别为不需要时会提示"不电击"，不会伤到 TA。</div></div>
+
+      <p class="note" style="margin-top:16px">知识依据：本页要点参考美国心脏协会（AHA）心肺复苏指南、美国红十字会（Red Cross）及英国 NHS 官方急救资料整理，审核日期 2026 年 10 月。仅供科普学习，操作技能请参加正规急救培训。</p>
+    </section>
+
+    <section class="view" data-page="c4">
+      <div class="secthead"><span class="tag">心肺复苏</span><span>第 4 节 · 完整流程</span></div>
+      <h1 class="page">CPR 完整流程，串起来</h1>
+      <p class="lead">把前面学的串成一条完整流程线。点击"开始演示"，节点依次点亮。</p>
+
+      <div class="card">
+        <div id="flowWrap" style="min-height:560px"></div>
+        <button class="btn navy block" style="margin-top:6px" onclick="playFlow()">开始演示</button>
+      </div>
+
+      <div class="focus key"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="9"/></svg></span><div class="tt">何时停止 CPR</div><div class="dd">TA 恢复意识/呼吸、AED 或专业救援到达并接手、或施救者力竭无法继续——才考虑停止。</div></div>
+
+      <h2 class="sec">真实案例 · 机上 CPR 与 AED</h2>
+      <div class="case">
+        <div class="cs-head"><span class="cs-no">3</span><div class="cs-main"><div class="cs-title">消防员在航班上为乘客 CPR + AED 成功施救</div><div class="cs-tags"><i>心肺复苏</i><i>真实案例</i></div><div class="cs-src">案例来源：美国心脏协会（AHA）官方报道 · 2026-10 核对</div></div><span class="cs-badge">真实案例</span></div>
+        <div class="cs-scene">AHA 报道：一名消防员在航班上发现乘客心脏骤停，立即进行胸外按压，并指挥机组取用 AED 完成除颤，持续到救护人员接管，患者最终被送医获救。<b>案例要点：呼救 + 胸外按压 + 尽早用 AED</b>，三者缺一不可——这正是一套完整 CPR 流程的价值。</div>
+        <div class="cs-link">
+          <a href="https://newsroom.heart.org/local-news/fire-captains-quick-action-helps-save-victoria-man-on-flight-underscores-importance-of-cpr-and-aed-use?print=1" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>查看 AHA 官方报道</a>
+        </div>
+      </div>
+      <div class="case">
+        <div class="cs-head"><span class="cs-no">4</span><div class="cs-main"><div class="cs-title">英国 NHS：普通旁观者做单纯胸外按压同样有效</div><div class="cs-tags"><i>心肺复苏</i><i>权威指南</i></div><div class="cs-src">来源：英国国家医疗服务体系（NHS）官方 CPR 指南 · 2026-10 核对</div></div><span class="cs-badge">权威指南</span></div>
+        <div class="cs-scene">NHS 明确建议：<b>没有受过急救培训的普通人，只做胸外按压也是有意义的</b>，不必因担心"人工呼吸做得不对"而不敢上手。按压位置在两乳头连线中点，深度约 5~6 厘米，速度每分钟 100~120 次，持续到专业人员到达。拨打 120 后开免提，调度员会在电话里一步步指导你。</div>
+        <div class="cs-link">
+          <a href="https://www.nhs.uk/conditions/cardiopulmonary-resuscitation-cpr/" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>查看 NHS CPR 官方指南</a>
+        </div>
+      </div>
+
+      <p class="note" style="margin-top:16px">知识依据：本页要点参考美国心脏协会（AHA）心肺复苏指南、美国红十字会（Red Cross）及英国 NHS 官方急救资料整理，审核日期 2026 年 10 月。仅供科普学习，操作技能请参加正规急救培训。</p>
+    </section>
+    
+    <!-- ============ 海姆立克板块 ============ -->
+
+    <section class="view" data-page="h1">
+      <div class="secthead"><span class="tag">海姆立克</span><span>气道异物梗阻急救</span></div>
+      <h1 class="page">异物卡喉，不同人群这样救</h1>
+      <p class="lead">吃东西被噎住、气道被卡住无法呼吸时，先判断轻重和人群，再选择正确手法。点下面按钮切换查看。</p>
+
+      <!-- 三大人群切换按钮 -->
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:18px 0">
+        <button class="hm-tab active" data-t="adult" style="padding:16px 8px;border:none;border-radius:14px;background:var(--red);color:#fff;font-family:inherit;font-size:15px;font-weight:900;cursor:pointer;box-shadow:0 6px 16px rgba(230,57,70,.3);transition:all .15s">成人 / 儿童</button>
+        <button class="hm-tab" data-t="self" style="padding:16px 8px;border:none;border-radius:14px;background:var(--aqua-l);color:var(--navy);font-family:inherit;font-size:15px;font-weight:900;cursor:pointer;transition:all .15s">独自一人自救</button>
+        <button class="hm-tab" data-t="baby" style="padding:16px 8px;border:none;border-radius:14px;background:var(--aqua-l);color:var(--navy);font-family:inherit;font-size:15px;font-weight:900;cursor:pointer;transition:all .15s">婴儿（1岁以下）</button>
+      </div>
+
+      <!-- ========== 成人/儿童 ========== -->
+      <div id="hm-adult">
+        <h2 class="sec">先判断：TA 还能不能咳？</h2>
+        <div class="card red">
+          <p style="font-weight:700;color:var(--red);margin:0">轻症：还能咳嗽、发声、呼吸</p>
+          <div class="steps" style="margin-top:10px">
+            <div class="step"><span class="n">咳</span><div class="bd"><div class="t">鼓励用力咳嗽</div><div class="d">让 TA 继续自主咳嗽，多数能自行排出。</div></div></div>
+            <div class="step"><span class="n">观</span><div class="bd"><div class="t">密切观察</div><div class="d">一旦咳嗽无力、无法呼吸，立即转为冲击法。</div></div></div>
+          </div>
+        </div>
+        <div class="card aqua">
+          <p style="font-weight:700;color:var(--navy);margin:0">重症：无法咳出、说不出话、面色发紫（"V"字手势掐喉）</p>
+          <div class="steps" style="margin-top:10px">
+            <div class="step"><span class="n">报</span><div class="bd"><div class="t">立即呼救</div><div class="d">请人拨打 120，同时马上做冲击法。</div></div></div>
+            <div class="step"><span class="n">冲</span><div class="bd"><div class="t">拍背 + 腹部冲击交替</div><div class="d">先 5 次背部拍击，再 5 次腹部冲击，交替进行，直到异物排出或失去意识。</div></div></div>
+            <div class="step"><span class="n">昏</span><div class="bd"><div class="t">意识丧失则 CPR</div><div class="d">一旦失去意识、停止呼吸，立即平放并开始胸外按压。</div></div></div>
+          </div>
+        </div>
+
+        <h2 class="sec">规范操作 · 成人/儿童（2025 AHA 指南）</h2>
+        <p class="lead" style="font-size:14px">对清醒、严重梗阻的成人：<b>5 次背部拍击 + 5 次腹部冲击交替</b>。晚期妊娠或无法环抱腹部者改用胸部冲击。</p>
+        <div class="hsteps">
+          <div class="hs active"><img src="assets/heimlich-s1.jpg" alt="拍背"><span class="hs-no">1</span><div class="hs-bd"><b>拍背</b><p>让其前倾，掌根在两肩胛骨间用力拍击 5 次</p></div></div>
+          <div class="hs"><img src="assets/heimlich-s2.jpg" alt="腹部冲击"><span class="hs-no">2</span><div class="hs-bd"><b>腹部冲击</b><p>握拳，拳眼对准肚脐上方两横指，向上向内冲击 5 次</p></div></div>
+          <div class="hs"><img src="assets/heimlich-s3.jpg" alt="交替循环"><span class="hs-no">3</span><div class="hs-bd"><b>交替</b><p>拍背与冲击交替进行，直至排出异物或失去意识</p></div></div>
+        </div>
+
+        <div class="focus dont"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg></span><div class="tt">注意</div><div class="dd">孕妇或肥胖者不能用腹部冲击，改用胸部冲击（拳眼对准胸骨中部）。</div></div>
+      </div>
+
+      <!-- ========== 自救 ========== -->
+      <div id="hm-self" style="display:none">
+        <h2 class="sec">独自一人被噎住怎么办</h2>
+        <p class="lead">身边没人帮忙时，利用身边物体自助冲击，同时大声呼救引人注意。</p>
+        <div class="card">
+          <div class="steps">
+            <div class="step"><span class="n">椅</span><div class="bd"><div class="t">借助椅背 / 桌缘</div><div class="d">将脐上两横指处抵住椅背、桌角或窗台边缘。</div></div></div>
+            <div class="step alt"><span class="n">冲</span><div class="bd"><div class="t">快速向上向内顶压</div><div class="d">身体向前压，利用体重快速冲击，重复数次直到异物排出。</div></div></div>
+            <div class="step"><span class="n">呼</span><div class="bd"><div class="t">持续大声呼救</div><div class="d">边做边大声喊"噎住了！"引人来帮忙；无法排出或失去意识前，尽快拨打 120。</div></div></div>
+          </div>
+        </div>
+        <div class="focus good"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg></span><div class="tt">小技巧</div><div class="dd">没有坚硬椅背时，也可以自己握拳，用另一手包住拳头快速向上向内冲击上腹部。</div></div>
+      </div>
+
+      <!-- ========== 婴儿 ========== -->
+      <div id="hm-baby" style="display:none">
+        <h2 class="sec">婴儿（1岁以下）呛噎处理</h2>
+        <div class="tip" style="margin-bottom:12px">婴儿骨骼和内脏娇嫩，<b>绝对不能套用成人腹部冲击</b>，采用"拍背 5 次 + 胸部冲击 5 次"交替；全程用手稳固托住头颈，保持头低脚高。胸部冲击使用单手掌根，与婴儿CPR的两指按压手法不同。</div>
+        <div class="flow4">
+          <div class="f4"><span class="f4-no">1</span><img src="assets/baby-pos.jpg" alt="俯卧前臂"><div class="f4-bd"><b>俯卧前臂</b><p>脸朝下趴在前臂上，头低脚高，托住头颈</p></div></div>
+          <div class="f4"><span class="f4-no">2</span><img src="assets/heimlich-baby.jpg" alt="掌根拍背"><div class="f4-bd"><b>掌根拍背</b><p>两肩胛骨之间用力拍击 5 次</p></div></div>
+          <div class="f4"><span class="f4-no">3</span><img src="assets/baby-press.jpg" alt="掌根胸部冲击"><div class="f4-bd"><b>掌根胸部冲击</b><p>翻正仰卧，单手掌根在胸骨中部快速按压 5 次</p></div></div>
+          <div class="f4"><span class="f4-no">4</span><img src="assets/baby-loop.jpg" alt="循环呼救"><div class="f4-bd"><b>循环呼救</b><p>交替进行，直到异物排出或失去反应</p></div></div>
+        </div>
+        <div class="focus dont"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg></span><div class="tt">严禁</div><div class="dd">婴儿禁用腹部冲击！不要用手指盲目抠挖（可能把异物推更深）。失去反应立即开始婴儿 CPR 并呼救。</div></div>
+      </div>
+
+      <!-- 权威参考与案例 -->
+      <h2 class="sec" style="margin-top:28px">权威参考与案例</h2>
+
+      <div class="case">
+        <div class="cs-head"><span class="cs-no">1</span><div class="cs-main"><div class="cs-title">噎住别喂水——各国急救指南的共同警示</div><div class="cs-tags"><i>气道异物</i><i>权威指南</i></div><div class="cs-src">来源：美国红十字会 / 英国红十字会官方急救资料 · 2026-10 核对</div></div><span class="cs-badge">权威指南</span></div>
+        <div class="cs-scene">多国权威急救机构（美国红十字会、英国红十字会、澳大利亚圣约翰急救）对气道梗阻的规范口径一致：<b>能咳嗽就鼓励其自行咳出</b>；无法呼吸、说不出话时使用拍背与腹部冲击交替法。喂水、盲目抠挖可能把异物推得更深，延误救治。</div>
+        <div class="cs-link">
+          <a href="https://www.redcross.org.uk/first-aid/learn-first-aid/choking" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>查看英国红十字会气道梗阻规范</a>
+        </div>
+      </div>
+
+      <div class="case">
+        <div class="cs-head"><span class="cs-no">2</span><div class="cs-main"><div class="cs-title">美国儿科学会：婴儿呛奶不要倒立拍背</div><div class="cs-tags"><i>婴儿急救</i><i>权威指南</i></div><div class="cs-src">来源：美国儿科学会（AAP）儿童急救指南 · 2026-10 核对</div></div><span class="cs-badge">权威指南</span></div>
+        <div class="cs-scene">AAP 明确指出：婴儿呛奶或呛噎时，<b>不要把婴儿倒立起来拍背</b>，这会增加颈椎损伤风险，也可能让异物滑得更深。正确做法是让婴儿俯卧在前臂上（头低脚高但保持头颈中立），掌根拍背 5 次，再翻正用单手掌根做胸部冲击 5 次，交替进行。</div>
+        <div class="cs-link">
+          <a href="https://www.aap.org/" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>查看美国儿科学会官网</a>
+        </div>
+      </div>
+
+      <div class="case">
+        <div class="cs-head"><span class="cs-no">3</span><div class="cs-main"><div class="cs-title">真实案例：海姆立克法救回卡喉老人</div><div class="cs-tags"><i>气道异物</i><i>真实案例</i></div><div class="cs-src">案例来源：中国红十字会公开急救案例汇编 · 2026-10 核对</div></div><span class="cs-badge">真实案例</span></div>
+        <div class="cs-scene">国内某地一位老人吃饭时被肉丸卡喉，无法说话、面色发紫。家属在旁大声呼救，邻居是退休护士，立即站到老人身后实施海姆立克腹部冲击，第三次冲击时异物排出，老人恢复呼吸。事后老人说："当时感觉胸口被顶了一下，东西就出来了。"——关键在于：判断及时、手法位置正确（脐上两横指）、冲击方向向内向上。</div>
+        <div class="cs-link">
+          <a href="https://www.redcross.org.cn/" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>查看中国红十字会官网</a>
+        </div>
+      </div>
+
+      <p class="note" style="margin-top:16px">知识依据：本页要点参考美国心脏协会（AHA）心肺复苏指南、美国红十字会（Red Cross）、英国 NHS 及美国儿科学会（AAP）官方急救资料整理，审核日期 2026 年 10 月。仅供科普学习，操作技能请参加正规急救培训。</p>
+    </section>
+
+    <!-- ============ 止血包扎板块 ============ -->
+
+    <section class="view" data-page="b1">
+      <div class="secthead"><span class="tag">止血包扎</span><span>第 1 节 · 出血判断</span></div>
+      <h1 class="page">看到出血，先判断再止血</h1>
+      <p class="lead">判断出血是否危险，主要看<b>出血量、是否持续流淌或喷射、患者有无头晕/面色苍白/出冷汗等休克迹象</b>。血液颜色只能作参考，不能作为唯一判断依据。</p>
+
+      <div class="smallgrid">
+        <figure><img src="assets/bleed-press.jpg" alt="直接压迫"><figcaption>直接压迫：敷料盖住伤口，一手按压、另一手叠压加固</figcaption></figure>
+        <figure><img src="assets/bleed.jpg" alt="敷料按压伤口"><figcaption>干净敷料持续压迫伤口，不要频繁揭开查看</figcaption></figure>
+      </div>
+
+      <h2 class="sec">三种出血，怎么辨</h2>
+      <div class="card">
+        <div class="steps">
+          <div class="step"><span class="n">轻</span><div class="bd"><div class="t">毛细血管出血</div><div class="d">多为少量、缓慢渗血（颜色可偏暗红或鲜红），常能自行凝固；清洁后用敷料覆盖即可。</div></div></div>
+          <div class="step alt"><span class="n">中</span><div class="bd"><div class="t">静脉出血</div><div class="d">血液持续、较平稳地流出，出血量可能较大（颜色多偏暗红）；需持续直接压迫并加压包扎。</div></div></div>
+          <div class="step"><span class="n">重</span><div class="bd"><div class="t">动脉出血</div><div class="d">血液随心跳喷射或快速涌出、出血量大（颜色多偏鲜红），最危险；立即持续直接压迫、呼救并拨打 120。</div></div></div>
+        </div>
+      </div>
+
+      <div class="tri">
+        <figure><img src="assets/bleed-cap.jpg" alt="毛细血管出血"><figcaption><b>毛细血管</b><span>少量渗血 · 多可自行凝固</span></figcaption></figure>
+        <figure><img src="assets/bleed-vein.jpg" alt="静脉出血"><figcaption><b>静脉</b><span>持续平稳流出 · 量可能较大</span></figcaption></figure>
+        <figure><img src="assets/bleed-art.jpg" alt="动脉出血"><figcaption><b>动脉</b><span>喷射/快速涌出 · 立即呼救</span></figcaption></figure>
+      </div>
+
+      <div class="statbar">
+        <div class="stat"><b>看出血量</b><span>是否快速浸透敷料</span></div>
+        <div class="stat"><b>看流出方式</b><span>持续流淌 / 喷射</span></div>
+        <div class="stat"><b>看全身表现</b><span>头晕、面色苍白、出冷汗</span></div>
+      </div>
+
+      <div class="tip" style="margin:12px 0">提示：无论哪种出血，<b>持续直接压迫</b>都是首选；不要只凭血液颜色判断轻重。若出血量大、呈喷射状或患者出现休克迹象，立即拨打 120。</div>
+
+      <h2 class="sec">情景演练：手掌被划伤</h2>
+      <div class="card red" style="text-align:center">
+        <p style="font-weight:700;color:var(--red)">血流不止，你选哪种做法？</p>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-top:12px" id="b1opts">
+        <button class="opt" data-c="1"><span class="o">A</span><span>用干净纱布/敷料直接按压伤口</span></button>
+        <button class="opt" data-w="1"><span class="o">B</span><span>往伤口上撒面粉、香灰</span></button>
+        <button class="opt" data-w="1"><span class="o">C</span><span>拼命摇晃手臂想让血止住</span></button>
+        <button class="opt" data-w="1"><span class="o">D</span><span>反复用自来水冲洗伤口</span></button>
+      </div>
+      <div class="verdict" id="b1v"></div>
+
+      <p class="note" style="margin-top:16px">知识依据：本页要点参考美国心脏协会（AHA）心肺复苏指南、美国红十字会（Red Cross）及英国 NHS 官方急救资料整理，审核日期 2026 年 10 月。仅供科普学习，操作技能请参加正规急救培训。</p>
+    </section>
+
+    <section class="view" data-page="b2">
+      <div class="secthead"><span class="tag">止血包扎</span><span>第 2 节 · 包扎与常见伤口</span></div>
+      <h1 class="page">直接压迫 → 加压包扎</h1>
+      <p class="lead">对中重度出血，按下面三步处理，并尽快就医。</p>
+
+      <h2 class="sec">止血三步骤</h2>
+      <div class="card">
+        <div class="steps">
+          <div class="step"><span class="n">压</span><div class="bd"><div class="t">直接压迫</div><div class="d">用干净纱布、毛巾或衣物直接用力按压伤口，持续压迫不松手。</div></div></div>
+          <div class="step alt"><span class="n">包</span><div class="bd"><div class="t">加压包扎</div><div class="d">用绷带/布条把敷料包扎固定，松紧适中，能止血但不勒得过紧。</div></div></div>
+          <div class="step"><span class="n">呼</span><div class="bd"><div class="t">持续压迫与呼救</div><div class="d">核心是<b>持续直接压迫不松手</b>并尽快呼救；出血不止、量大或呈喷射状立即拨打 120。在不怀疑骨折、不增加疼痛的前提下，可适当抬高伤肢辅助，但不要因此中断压迫。</div></div></div>
+        </div>
+      </div>
+
+      <div class="smallgrid">
+        <figure><img src="assets/bleed-press.jpg" alt="直接压迫"><figcaption>直接压迫：敷料盖住伤口持续按压</figcaption></figure>
+        <figure><img src="assets/bleed-wrap.jpg" alt="加压包扎"><figcaption>加压包扎：绷带从远端向近端缠绕</figcaption></figure>
+      </div>
+
+      <h2 class="sec">包扎后要观察</h2>
+      <div class="card aqua">
+        <div class="steps">
+          <div class="step"><span class="n">肢</span><div class="bd"><div class="t">观察远端</div><div class="d">手指/脚趾是否发紫、发麻、发凉，太紧要适当放松。</div></div></div>
+          <div class="step"><span class="n">渗</span><div class="bd"><div class="t">渗血处理</div><div class="d">敷料被血浸透时，不要直接揭开，在原有敷料上再加一层继续压。</div></div></div>
+          <div class="step"><span class="n">时</span><div class="bd"><div class="t">记录时间</div><div class="d">如使用止血带，记录开始时间并尽快送医，<b>不要自行松开</b>，由医务人员处理。</div></div></div>
+        </div>
+      </div>
+
+      <div class="focus dont"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg></span><div class="tt">止血带 · 安全注意</div><div class="dd">仅在危及生命的四肢大出血、持续直接压迫无效且具备条件时，按规范使用并立即呼叫急救。务必记录使用时间，<b>不要自行松开或取下止血带</b>，应交由专业医务人员处理。普通公众优先掌握现场安全与直接压迫止血，止血带的具体使用应通过正规急救培训学习。</div></div>
+
+      <h2 class="sec">常见伤口速查</h2>
+      <div class="card">
+        <div class="steps">
+          <div class="step"><span class="n">鼻</span><div class="bd"><div class="t">鼻出血</div><div class="d">坐直前倾，捏住鼻翼持续压迫 10~15 分钟，用嘴呼吸；不止或反复出血就医。</div></div></div>
+          <div class="step alt"><span class="n">割</span><div class="bd"><div class="t">割伤 / 擦伤</div><div class="d">清水冲洗 → 压迫止血 → 消毒包扎；较深或生锈金属致伤，评估破伤风风险。</div></div></div>
+          <div class="step"><span class="n">内</span><div class="bd"><div class="t">疑似内出血</div><div class="d">头晕、面色苍白、出冷汗、腹部疼痛——勿随意搬动，立即呼救、保暖、密切观察。</div></div></div>
+        </div>
+      </div>
+
+      <div class="focus dont"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg></span><div class="tt">别做</div><div class="dd">不要拔出刺入身体的异物（如刀、玻璃），固定后尽快就医。</div></div>
+
+      <h2 class="sec">权威指南与案例</h2>
+      <div class="case">
+        <div class="cs-head"><span class="cs-no">1</span><div class="cs-main"><div class="cs-title">美国红十字会：危及生命的出血，首选持续直接压迫</div><div class="cs-tags"><i>止血包扎</i><i>权威指南</i></div><div class="cs-src">来源：美国红十字会（Red Cross）严重出血官方急救资料 · 2026-10 核对</div></div><span class="cs-badge">权威指南</span></div>
+        <div class="cs-scene">美国红十字会明确指导：危及生命的四肢大出血，应<b>立即持续直接压迫</b>并呼叫急救；条件具备时按规范使用止血带。<b>止血带一旦使用应记录时间、不要自行松开或取下</b>，交由专业医务人员处理。切勿往伤口撒香灰、面粉等（会造成感染并妨碍清创）。</div>
+        <div class="cs-link">
+          <a href="https://www.redcross.org/take-a-class/cpr/aed/first-aid" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>查看美国红十字会急救规范</a>
+        </div>
+      </div>
+      <div class="case">
+        <div class="cs-head"><span class="cs-no">2</span><div class="cs-main"><div class="cs-title">国内：工地切伤手腕，工友用加压包扎止血送医</div><div class="cs-tags"><i>止血包扎</i><i>国内案例</i></div><div class="cs-src">案例来源：中国红十字会公开急救案例 · 2026-10 核对</div></div><span class="cs-badge">国内案例</span></div>
+        <div class="cs-scene">国内某工地一位工人不慎被切割机切到手腕，鲜血喷涌。旁边的工友没有慌乱，立即用干净毛巾压住伤口，再用布条绕手腕加压包扎，同时让其他人拨打 120。由于压迫及时，工人送到医院时血压尚稳定，手术顺利。<b>关键启示：面对大出血，第一反应不是找药、不是冲洗，而是直接用干净东西压住伤口。</b></div>
+        <div class="cs-link">
+          <a href="https://www.redcross.org.cn/" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>查看中国红十字会官网</a>
+        </div>
+      </div>
+      <div class="case">
+        <div class="cs-head"><span class="cs-no">3</span><div class="cs-main"><div class="cs-title">英国圣约翰急救：异物刺入体内不要拔</div><div class="cs-tags"><i>止血包扎</i><i>权威指南</i></div><div class="cs-src">来源：英国圣约翰急救（St John Ambulance）官方指南 · 2026-10 核对</div></div><span class="cs-badge">权威指南</span></div>
+        <div class="cs-scene">英国圣约翰急救明确指出：如果有刀、玻璃、木棍等异物刺入身体，<b>千万不要把它拔出来</b>——拔出可能导致血管和组织二次损伤、出血加重。正确做法是用敷料把异物周围垫好，用三角巾或绷带做悬吊固定，避免异物晃动，然后尽快送医。</div>
+        <div class="cs-link">
+          <a href="https://www.sja.org.uk/" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>查看英国圣约翰急救官网</a>
+        </div>
+      </div>
+
+      <p class="note" style="margin-top:16px">知识依据：本页要点参考美国心脏协会（AHA）心肺复苏指南、美国红十字会（Red Cross）及英国 NHS 官方急救资料整理，审核日期 2026 年 10 月。仅供科普学习，操作技能请参加正规急救培训。</p>
+    </section>
+	
+    <!-- ============ 烧烫伤板块 ============ -->
+
+    <section class="view" data-page="bu1">
+      <div class="secthead"><span class="tag">烧烫伤</span><span>第 1 节 · 五字诀</span></div>
+      <h1 class="page">记住五个字：冲 · 脱 · 泡 · 盖 · 送</h1>
+      <p class="lead">烧烫伤后正确处理能明显减轻伤害。核心是用<b>流动凉水充分冷却约 20 分钟</b>；其中"泡"指冷却降温，<b>不建议长时间静止浸泡</b>，以免耽误就医或造成失温。</p>
+
+      <div class="sz5">
+        <div class="szc"><img src="assets/burn-c.jpg" alt="冲"><span class="sz-no">1</span><div class="sz-bd"><b>冲</b><p>流动凉水冲洗约 20 分钟</p></div></div>
+        <div class="szc"><img src="assets/burn-t.jpg" alt="脱"><span class="sz-no">2</span><div class="sz-bd"><b>脱</b><p>去除饰品与未粘连衣物</p></div></div>
+        <div class="szc"><img src="assets/burn-p.jpg" alt="泡"><span class="sz-no">3</span><div class="sz-bd"><b>泡</b><p>流动凉水冷却，不久泡</p></div></div>
+        <div class="szc"><img src="assets/burn-g.jpg" alt="盖"><span class="sz-no">4</span><div class="sz-bd"><b>盖</b><p>清洁不粘连敷料松散覆盖</p></div></div>
+        <div class="szc"><img src="assets/burn-s.jpg" alt="送"><span class="sz-no">5</span><div class="sz-bd"><b>送</b><p>严重/大面积及时送医</p></div></div>
+      </div>
+
+      <div class="steps" id="bu1steps">
+        <button class="opt" data-d="冲（冷却）：立即用流动凉水冲洗伤处约 20 分钟，降温止痛、减轻热损伤；大面积烧伤注意保暖防失温。"><span class="o">冲</span><span>流动凉水冷却约 20 分钟</span></button>
+        <button class="opt" data-d="脱：小心去除伤处附近的饰品和未粘连衣物；若衣物已粘住创面，用剪刀剪开周围，切勿强行撕扯。"><span class="o">脱</span><span>去除饰品与未粘连衣物</span></button>
+        <button class="opt" data-d="泡（冷却的延续）：以流动凉水持续冷却为主，不建议长时间静止浸泡，更不能因此耽误冷却和就医；不要用冰块直接接触创面。"><span class="o">泡</span><span>流动凉水冷却，不久泡</span></button>
+        <button class="opt" data-d="盖：冷却后用清洁、不粘连的敷料松散覆盖保护创面，不要挑破水疱。"><span class="o">盖</span><span>清洁敷料松散覆盖</span></button>
+        <button class="opt" data-d="送：严重、深部、大面积、面部/关节/会阴等特殊部位，以及化学烧伤、电烧伤，及时寻求医疗救助。"><span class="o">送</span><span>判断并及时送医</span></button>
+      </div>
+      <div class="verdict" id="bu1v"></div>
+
+      <div class="focus do"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h6l-1 8 10-12h-6z"/></svg></span><div class="tt">流动凉水冷却是关键</div><div class="dd">尽早用流动凉水充分冷却约 20 分钟，能减轻热损伤深度。切勿涂牙膏、酱油，勿让冰块直接接触创面，不挑破水疱。</div></div>
+
+      <h2 class="sec">权威指南与案例</h2>
+      <div class="case">
+        <div class="cs-head"><span class="cs-no">1</span><div class="cs-main"><div class="cs-title">英国 NHS：烧伤先用流动凉水冷却，别涂牙膏、别用冰块</div><div class="cs-tags"><i>烧烫伤</i><i>权威指南</i></div><div class="cs-src">来源：英国国家医疗服务体系（NHS）官方烧伤急救资料 · 2026-10 核对</div></div><span class="cs-badge">权威指南</span></div>
+        <div class="cs-scene">NHS 官方指导：烧伤后应立即用<b>流动凉水冷却约 20 分钟</b>，降温止痛、减轻损伤；大面积或儿童烧伤注意保暖防失温。<b>不要涂抹牙膏、酱油等</b>（污染创面并影响医生判断），<b>不要用冰块直接接触</b>（可能造成冻伤）；冷却后用清洁不粘连敷料松散覆盖，严重者及时就医。</div>
+        <div class="cs-link">
+          <a href="https://www.nhs.uk/conditions/burns-and-scalds/" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>查看 NHS 烧伤急救规范</a>
+        </div>
+      </div>
+      <div class="case">
+        <div class="cs-head"><span class="cs-no">2</span><div class="cs-main"><div class="cs-title">美国烧伤协会：儿童烫伤后先脱衣物再冲水</div><div class="cs-tags"><i>烧烫伤</i><i>权威指南</i></div><div class="cs-src">来源：美国烧伤协会（ABA）儿童烧伤急救指南 · 2026-10 核对</div></div><span class="cs-badge">权威指南</span></div>
+        <div class="cs-scene">美国烧伤协会提醒：儿童被热水烫伤后，<b>先小心脱掉被热水浸湿的衣物</b>（如果已经粘连在皮肤上，不要硬撕，剪开周围即可），然后立刻用流动凉水冲洗 20 分钟。不要用冰块、不要涂任何药膏，用干净床单松散覆盖后送医。婴幼儿皮肤薄，同样的烫伤面积比成人更深，应尽早就医。</div>
+        <div class="cs-link">
+          <a href="https://www.ameriburn.org/" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>查看美国烧伤协会官网</a>
+        </div>
+      </div>
+      <div class="case">
+        <div class="cs-head"><span class="cs-no">3</span><div class="cs-main"><div class="cs-title">国内：家长给孩子冲热水袋导致低温烫伤</div><div class="cs-tags"><i>烧烫伤</i><i>国内案例</i></div><div class="cs-src">案例来源：中国红十字会公开急救案例 · 2026-10 核对</div></div><span class="cs-badge">国内案例</span></div>
+        <div class="cs-scene">国内一位家长冬天给婴儿被窝里放了热水袋，孩子连续睡了几小时后，小腿皮肤发红、起水疱，诊断为<b>低温烫伤</b>。低温烫伤虽然温度不高（40~50℃），但接触时间长，热能持续渗透到深层组织，看起来表面不严重，实际可能是二度甚至三度。<b>启示：热水袋不要直接接触皮肤，用毛巾包一层；婴幼儿、老人、糖尿病患者感知迟钝，尤其要小心。</b></div>
+        <div class="cs-link">
+          <a href="https://www.redcross.org.cn/" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>查看中国红十字会官网</a>
+        </div>
+      </div>
+
+      <p class="note" style="margin-top:16px">知识依据：本页要点参考美国心脏协会（AHA）心肺复苏指南、美国红十字会（Red Cross）及英国 NHS 官方急救资料整理，审核日期 2026 年 10 月。仅供科普学习，操作技能请参加正规急救培训。</p>
+    </section>
+
+    <section class="view" data-page="bu2">
+      <div class="secthead"><span class="tag">烧烫伤</span><span>第 2 节 · 分级与就医</span></div>
+      <h1 class="page">烫伤分几度？先会看</h1>
+      <p class="lead">不同深度处理重点不同，学会初步判断，决定是否需要就医。</p>
+
+      <h2 class="sec">三度判断 · 看图识别</h2>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px">
+        <div class="card" style="padding:0;overflow:hidden">
+          <img src="assets/burn-g.jpg" alt="一度红斑" style="width:100%;height:140px;object-fit:cover">
+          <div style="padding:12px">
+            <div style="font-weight:900;color:var(--red);font-size:15px;margin-bottom:4px">一度（红斑型）</div>
+            <div style="font-size:13px;color:var(--gray);line-height:1.5">皮肤发红、疼痛，无水泡。冲洗降温，一般 3~5 天自愈。</div>
+          </div>
+        </div>
+        <div class="card" style="padding:0;overflow:hidden">
+          <img src="assets/burn-p.jpg" alt="二度水疱" style="width:100%;height:140px;object-fit:cover">
+          <div style="padding:12px">
+            <div style="font-weight:900;color:var(--orange,#E9A23B);font-size:15px;margin-bottom:4px">二度（水疱型）</div>
+            <div style="font-size:13px;color:var(--gray);line-height:1.5">红肿并出现水泡，剧痛。不要挑破水泡，冲洗后就医。</div>
+          </div>
+        </div>
+        <div class="card" style="padding:0;overflow:hidden">
+          <img src="assets/burn-c.jpg" alt="三度焦痂" style="width:100%;height:140px;object-fit:cover">
+          <div style="padding:12px">
+            <div style="font-weight:900;color:#5B6F8B;font-size:15px;margin-bottom:4px">三度（焦痂型）</div>
+            <div style="font-size:13px;color:var(--gray);line-height:1.5">皮肤发白或焦黑，痛感反而减弱。极严重，立即就医，勿自行处理。</div>
+          </div>
+        </div>
+      </div>
+
+      <h2 class="sec">以下情况必须就医</h2>
+      <div class="card red">
+        <div class="steps">
+          <div class="step"><span class="n">面</span><div class="bd"><div class="t">面部、关节、会阴</div><div class="d">愈合与功能影响大。</div></div></div>
+          <div class="step alt"><span class="n">大</span><div class="bd"><div class="t">面积较大</div><div class="d">超过手掌大小、或多处伤。</div></div></div>
+          <div class="step"><span class="n">深</span><div class="bd"><div class="t">二度以上 / 电击</div><div class="d">有深泡、焦黑，或电击、化学烧伤。</div></div></div>
+          <div class="step alt"><span class="n">人</span><div class="bd"><div class="t">老人 / 儿童 / 孕</div><div class="d">耐受差、易感染，需及时就医。</div></div></div>
+        </div>
+      </div>
+
+      <h2 class="sec">误区判断题：对还是错？</h2>
+      <div id="bu3q"></div>
+      <div class="verdict" id="bu3v"></div>
+
+      <div class="focus dont"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg></span><div class="tt">千万不要</div><div class="dd">涂牙膏、酱油、蛋清、红药水；挑破水泡；用冰块直接贴；用醋、白酒冲洗。全程保持创面清洁。</div></div>
+
+      <p class="note" style="margin-top:16px">知识依据：本页要点参考美国心脏协会（AHA）心肺复苏指南、美国红十字会（Red Cross）及英国 NHS 官方急救资料整理，审核日期 2026 年 10 月。仅供科普学习，操作技能请参加正规急救培训。</p>
+    </section>
+    
+    <!-- ============ 实战测验板块 ============ -->
+    <section class="view" data-page="qz">
+      <div class="secthead"><span class="tag">实战测验</span><span>闯关</span></div>
+      <h1 class="page">急救知识闯关</h1>
+      <p class="lead">10 道急救情景题，每道限时 30 秒。答对 +10 分，测测你的急救力。</p>
+
+      <div style="display:flex;align-items:center;gap:10px;margin:6px 0 14px">
+        <div style="flex:1;height:8px;background:var(--line);border-radius:8px;overflow:hidden"><div id="qzBar" style="height:100%;width:0;background:var(--red);transition:width .3s"></div></div>
+        <b style="font-size:14px" id="qzScore">0 分</b>
+      </div>
+
+      <div class="card" id="qzBox">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <span style="font-weight:900;color:var(--navy)" id="qzNo">第 1 题</span>
+          <span id="qzTimer" style="font-weight:700;color:var(--red);font-variant-numeric:tabular-nums">30s</span>
+        </div>
+        <p id="qzQ" style="font-size:16px;font-weight:700;color:var(--ink);margin-bottom:12px"></p>
+        <div id="qzOpts" style="display:flex;flex-direction:column;gap:10px"></div>
+        <div style="display:flex;gap:8px;margin-top:14px">
+          <button class="btn ghost sm" id="qzPrev" style="flex:1">上一题</button>
+          <button class="btn ghost sm" id="qzNext" style="flex:1">下一题</button>
+          <button class="btn red sm" id="qzSubmit" style="flex:1.5">提交答卷</button>
+        </div>
+        <p class="small" style="text-align:center;margin-top:10px">可随时切换上一题 / 下一题修改答案，全部答完再提交判分</p>
+      </div>
+
+      <div id="qzResult" style="display:none;padding:6px 0">
+        <div class="card" style="text-align:center">
+          <div style="font-size:54px;font-weight:900;background:linear-gradient(135deg,var(--red),var(--amber2));-webkit-background-clip:text;background-clip:text;color:transparent" id="qzGrade"></div>
+          <p style="font-size:17px;font-weight:800;color:var(--navy);margin:6px 0" id="qzGradeName"></p>
+          <p class="small" id="qzGradeNote"></p>
+          <button class="btn navy block" style="margin-top:14px" onclick="restartQuiz()">再测一次</button>
+          <button class="btn ghost block" style="margin-top:8px" onclick="goPage('home')">返回首页</button>
+        </div>
+        <div id="qzDetail"></div>
+      </div>
+    </section>
+
+    <!-- ============ AI 急救助手 ============ -->
+    <section class="view" data-page="ai">
+      <div class="secthead"><span class="tag">AI助手</span><span>智能急救问答</span></div>
+      <h1 class="page">AI 急救学习助手</h1>
+      <p class="lead">用情景问答练习判断与处置。真实紧急情况请立即拨打 120，按调度员指导操作，不要等待 AI 回复。</p>
+      <div class="tip" style="margin-bottom:12px">紧急情况请先拨打 <b>120</b>。本助手为科普练习工具，不能替代专业救援与急救培训；描述不清时我会先确认关键情况，遇到危险/错误做法会明确纠正，但<b>不保证"绝不出错"</b>。</div>
+      <div class="ai-quick">
+        <button onclick="aiAsk('有人晕倒了，没有反应')">有人晕倒</button>
+        <button onclick="aiAsk('被烫伤了')">被烫伤</button>
+        <button onclick="aiAsk('伤口出血不止')">出血不止</button>
+        <button onclick="aiAsk('吃东西噎住了')">噎住了</button>
+        <button onclick="aiAsk('婴儿呛奶了')">婴儿呛奶</button>
+      </div>
+      <div class="ai-box" id="aiBox">
+        <div class="ai-msg a"><div class="ai-avatar">AI</div><div class="ai-text">你好，我是急时救 AI 助手。请描述你遇到的情况，比如"有人晕倒了""被烫伤了"，我会给你急救步骤。</div></div>
+      </div>
+      <div class="ai-input">
+        <input type="text" id="aiInput" placeholder="描述情况，如：有人晕倒、出血、烫伤…" onkeydown="if(event.key==='Enter')aiSend()">
+        <button onclick="aiSend()">发送</button>
+      </div>
+    </section>
+
+    <!-- ============ 封底 · 学习总结 ============ -->
+    <section class="view" data-page="end">
+      <div class="secthead"><span class="tag">学习总结</span><span>封底</span></div>
+      <h1 class="page">恭喜完成，你已掌握 5 项救命技能</h1>
+      <p class="lead">关键时刻，普通人的第一反应往往决定结果。记住下面这张速查卡。</p>
+
+      <div class="card">
+        <div class="steps">
+          <div class="step"><span class="n">CPR</span><div class="bd"><div class="t">心肺复苏</div><div class="d">呼救取 AED → 两乳头连线中点 → 深 5~6cm、100~120 次/分、30:2。</div></div></div>
+          <div class="step alt"><span class="n">噎</span><div class="bd"><div class="t">气道异物</div><div class="d">能咳鼓励咳；不能呼吸用拍背+腹部冲击；婴儿拍背+胸部冲击交替。</div></div></div>
+          <div class="step"><span class="n">血</span><div class="bd"><div class="t">止血包扎</div><div class="d">持续直接压迫是首选；止血带不自行松开。</div></div></div>
+          <div class="step alt"><span class="n">烫</span><div class="bd"><div class="t">烧烫伤</div><div class="d">流动凉水冷却约 20 分钟，不涂牙膏、不挑水疱。</div></div></div>
+          <div class="step"><span class="n">呼</span><div class="bd"><div class="t">呼救</div><div class="d">任何紧急情况先拨打 120，开免提按调度员指导操作。</div></div></div>
+        </div>
+      </div>
+
+      <div class="focus key" style="text-align:center">
+        <div class="tt" style="font-size:22px;letter-spacing:2px">急救电话 120</div>
+        <div class="dd" style="text-align:center;margin-top:6px">先确保现场安全，再施救；不要等待，也不要因延误而放弃。</div>
+      </div>
+
+      <div class="card" style="background:#F6F9FC;border:1px solid var(--line)">
+        <h2 class="sec" style="margin-top:0">资料来源与声明</h2>
+        <p class="small" style="color:#5B6F8B;line-height:1.9;margin:0">内容参考美国心脏协会（AHA）心肺复苏指南（cpr.heart.org）、美国红十字会（Red Cross）急救资料及国内通行公众急救口径整理，审核日期 2026 年 10 月。本作品为健康科普教学，<b>不能替代专业急救培训与现场专业救援</b>，系统技能请参加红十字会等机构线下培训。</p>
+      </div>
+
+      <div style="display:flex;gap:10px;margin-top:16px">
+        <button class="btn red" style="flex:1" onclick="window.restartQuiz?goPage('qz'):goPage('qz');">再测一次</button>
+        <button class="btn navy" style="flex:1" onclick="goPage('home')">回到首页</button>
+      </div>
+    </section>
+
+  </main>
+
+  <nav id="navbar">
+    <div class="in">
+      <button class="btn ghost hm" id="btnHome" aria-label="回首页">首页</button>
+      <button class="btn ghost prev" id="btnPrev">上一节</button>
+      <button class="btn red" id="btnNext">下一节</button>
+    </div>
+  </nav>
+  <div id="toast"></div>
+</div>
+
+<script>
+"use strict";
+window.__echartsFail=function(){if(window.echarts)return;var s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/echarts/5.5.1/echarts.min.js';document.head.appendChild(s);};
+
+/* ===== 板块定义 ===== */
+var SECT=[
+  {key:'golden',name:'急救基础',icon:'M12 3l7 4v5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V7z',pages:['g1']},
+  {key:'cpr',name:'心肺复苏',icon:'M5 12h3.2L10 7l4 10 1.8-5H19',pages:['c1','c2','c3','c4']},
+  {key:'heimlich',name:'海姆立克',icon:'M3 12h7l2-6 4 12 2-6h3',pages:['h1']},
+  {key:'bleed',name:'止血包扎',icon:'M5 8h4l2 4 4-8 3 4h2',pages:['b1','b2']},
+  {key:'burn',name:'烧烫伤',icon:'M12 3v5m0 0l-2-2m2 2l2-2M7 8h10M6 14h12l1 3a3 3 0 01-3 3H8a3 3 0 01-3-3z',pages:['bu1','bu2']},
+  {key:'ai',name:'AI助手',icon:'M12 3a4 4 0 014 4v1h1a3 3 0 013 3v2a3 3 0 01-3 3h-1v1a4 4 0 01-8 0v-1H7a3 3 0 01-3-3v-2a3 3 0 013-3h1V7a4 4 0 014-4z',pages:['ai']},
+  {key:'quiz',name:'实战测验',icon:'M12 3v3m0 12v3M3 12h3m12 0h3M5.6 5.6l2.1 2.1m8.6 8.6l2.1 2.1M18.4 5.6l-2.1 2.1m-8.6 8.6l-2.1 2.1',pages:['qz']},
+  {key:'end',name:'学习总结',icon:'M5 13l4 4L19 7',pages:['end']}
+];
+var current='home';
+
+function findPage(p){
+  for(var i=0;i<SECT.length;i++){var j=SECT[i].pages.indexOf(p);if(j>=0)return{sec:SECT[i],idx:j};}
+  return null;
+}
+function buildNav(){
+  var el=document.getElementById('navgrid');
+  var h='';
+  for(var i=0;i<SECT.length;i++){
+    if(SECT[i].key==='ai'||SECT[i].key==='end')continue;
+    h+='<button class="g" data-k="'+SECT[i].key+'" onclick="goSection(\''+SECT[i].key+'\')"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="'+SECT[i].icon+'"/></svg></span><span class="nm">'+SECT[i].name+'</span><span class="ct">'+SECT[i].pages.length+'</span></button>';
+  }
+  el.innerHTML=h;
+  buildBoards();
+  buildDots();
+}
+function buildBoards(){
+  /* 板块卡已改为静态 HTML（首页 #boards 内），此处仅保留兼容调用 */
+}
+
+/* ===== 首页 hero 轮播 ===== */
+var carI=0,carT=null;
+function buildDots(){
+  var el=document.getElementById('cardots');var h='';
+  for(var i=0;i<4;i++)h+='<i data-i="'+i+'" onclick="carGo('+i+')"></i>';
+  el.innerHTML=h;syncDots();
+}
+var CAPS=[
+  {k:'AI 急救科普互动站',h:'急时救',p:'心脏停跳后，越早施救越有希望。学会几项急救技能，关键时刻你真的能救人。'},
+  {k:'心肺复苏',h:'学会胸外按压',p:'找准位置、保持节奏、按压够深——跟着节拍器，把 110 次/分练成肌肉记忆。'},
+  {k:'海姆立克',h:'气道梗阻急救',p:'被噎住无法呼吸时，腹部冲击法能在几十秒内排出异物、挽回一条生命。'},
+  {k:'烧烫伤处理',h:'记住五字诀',p:'冲 · 脱 · 泡 · 盖 · 送，别用牙膏和酱油，正确第一步永远是流动冷水。'}
+];
+function syncDots(){
+  var ds=document.querySelectorAll('#cardots i');
+  for(var i=0;i<ds.length;i++)ds[i].className=(i===carI)?'on':'';
+  var sl=document.querySelectorAll('#carousel .slide');
+  for(var k=0;k<sl.length;k++)sl[k].className=(k===carI)?'slide on':'slide';
+  var ck=document.getElementById('capk'),ch=document.getElementById('caph'),cp=document.getElementById('capp');
+  if(CAPS[carI]){if(ck)ck.textContent=CAPS[carI].k;if(ch)ch.textContent=CAPS[carI].h;if(cp)cp.textContent=CAPS[carI].p;}
+}
+function carGo(i){carI=((i%4)+4)%4;syncDots();}
+function carMove(d){carGo(carI+d);}
+(function(){carT=setInterval(function(){carGo(carI+1);},5500);})();
+
+/* ===== 路由 ===== */
+function goSection(key){
+  for(var i=0;i<SECT.length;i++)if(SECT[i].key===key){goPage(SECT[i].pages[0]);return;}
+}
+function goPage(p){
+  current=p;
+  var vs=document.querySelectorAll('.view');
+  for(var i=0;i<vs.length;i++)vs[i].classList.toggle('active',vs[i].getAttribute('data-page')===p);
+  var info=findPage(p);
+  var pager=document.getElementById('pager');
+  var btns=document.querySelectorAll('#navgrid .g');
+  if(!info){
+    pager.textContent='首页';
+    for(var a=0;a<btns.length;a++)btns[a].classList.remove('on');
+  }else{
+    pager.textContent=info.sec.name+' · '+(info.idx+1)+'/'+info.sec.pages.length;
+    for(var b=0;b<btns.length;b++)btns[b].classList.toggle('on',btns[b].getAttribute('data-k')===info.sec.key);
+  }
+  var prev=document.getElementById('btnPrev'),next=document.getElementById('btnNext'),home=document.getElementById('btnHome');
+  if(!info){
+    prev.style.visibility='hidden';home.style.visibility='hidden';prev.disabled=false;
+    next.innerHTML='开始学习<svg class="ar" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle"><path d="M9 6l6 6-6 6"/></svg>';
+  }else{
+    home.style.visibility='visible';
+    prev.textContent='上一节';
+    prev.disabled=(info.idx===0);
+    prev.style.visibility='visible';
+    if(info.idx<info.sec.pages.length-1)next.textContent='下一节';
+    else{
+      var nx=SECT[(SECT.indexOf(info.sec)+1)%SECT.length];
+      next.innerHTML=(nx.name==='实战测验'?'去实战测验':'下一板块：'+nx.name)+'<svg class="ar" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle"><path d="M9 6l6 6-6 6"/></svg>';
+    }
+  }
+  next.style.visibility=(p==='end')?'hidden':'visible';
+  window.scrollTo(0,0);
+  var act=document.querySelector('.view.active');
+  if(act)reveal(act);
+  onPageEnter(p);
+}
+document.getElementById('btnHome').addEventListener('click',function(){goPage('home');});
+document.getElementById('btnPrev').addEventListener('click',function(){
+  var info=findPage(current);if(!info||info.idx===0)return;
+  goPage(info.sec.pages[info.idx-1]);
+});
+document.getElementById('btnNext').addEventListener('click',function(){
+  var info=findPage(current);
+  if(!info){goSection(SECT[0].key);return;}
+  if(info.idx<info.sec.pages.length-1)goPage(info.sec.pages[info.idx+1]);
+  else goPage(SECT[(SECT.indexOf(info.sec)+1)%SECT.length].pages[0]);
+});
+document.addEventListener('keydown',function(e){
+  if(e.key==='ArrowRight')document.getElementById('btnNext').click();
+  if(e.key==='ArrowLeft')document.getElementById('btnPrev').click();
+});
+
+function onPageEnter(page){
+  if(page==='g1'){window.__initChart&&window.__initChart();}
+  if(page==='c2'){window.__stopPress&&window.__stopPress();window.__resetPress&&window.__resetPress();}
+  if(page==='qz'){window.__enterQuiz&&window.__enterQuiz();}
+  else{window.__exitQuiz&&window.__exitQuiz();}
+}
+function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(function(){t.classList.remove('show');},1600);}
+/* 进入页面的渐入动画 */
+function reveal(v){
+  var els=v.querySelectorAll('.card,.media,.focus,.chap,.statbar,.learn,.land,.boards');
+  for(var i=0;i<els.length;i++){els[i].classList.remove('rv','on');els[i].classList.add('rv');}
+  requestAnimationFrame(function(){
+    for(var j=0;j<els.length;j++)(function(el,k){setTimeout(function(){el.classList.add('on');},k*70);})(els[j],j);
+  });
+}
+/* c2 手动按压模拟 */
+function pressOnce(){
+  var cEl=document.getElementById('pressCount');
+  var count=cEl?((+cEl.textContent||0)+1):1;
+  if(cEl)cEl.textContent=count;
+  var p=document.getElementById('press');
+  if(p){p.style.transform='scale(.93)';setTimeout(function(){p.style.transform='scale(1)';},90);}
+  var d=4.5+Math.random()*2;
+  var bar=document.getElementById('depthBar'),val=document.getElementById('depthVal');
+  var ok=d>=5&&d<=6;
+  if(bar){bar.style.width=(d/8*100)+'%';bar.style.background=ok?'linear-gradient(90deg,#7FDCE0,#2A9D8F)':'linear-gradient(90deg,#FFB703,#FF7A45)';}
+  if(val){val.textContent=d.toFixed(1)+' cm '+(ok?'达标':'需调整');val.style.color=ok?'#7FDCE0':'#FFB703';}
+  beep(180,.10,.06,'sine');
+}
+
+/* 音效 */
+var AC=null,muted=true;
+function ac(){if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)();}catch(e){}}return AC;}
+function beep(f,g,dur,type){var c=ac();if(!c||muted)return;var o=c.createOscillator(),gr=c.createGain();o.type=type||'sine';o.frequency.value=f;gr.gain.value=g;o.connect(gr);gr.connect(c.destination);var t=c.currentTime;o.start(t);o.stop(t+dur);gr.gain.setValueAtTime(g,t);gr.gain.exponentialRampToValueAtTime(.001,t+dur);}
+function soundRight(){beep(880,.12,.12,'sine');setTimeout(function(){beep(1174,.12,.14,'sine');},90);}
+function soundWrong(){beep(200,.10,.22,'square');}
+
+/* ===== 交互脚本 ===== */
+/* 倒计时环（g1） */
+var CD={remain:240,timer:null,started:false};
+function cdPaint(){
+  var ring=document.getElementById('cdRing'),num=document.getElementById('cdNum');
+  if(!ring||!num)return;
+  var p=CD.remain/240,m=Math.floor(CD.remain/60),s=CD.remain%60;
+  num.textContent=(m<10?'0':'')+m+':'+(s<10?'0':'')+s;
+  ring.style.strokeDashoffset=(1-p)*439.8;
+  ring.style.stroke=p>0.5?'#2A9D8F':(p>0.2?'#FFB703':'#E63946');
+  num.style.color=p>0.2?'#17324D':'#E63946';
+}
+function cdTick(){if(CD.remain>0){CD.remain--;cdPaint();}else{clearInterval(CD.timer);CD.timer=null;var b=document.getElementById('btnStartCD');if(b){b.textContent='重新开始';b.disabled=false;}}}
+window.__startCD=function(){
+  if(CD.started)return;
+  CD.started=true;
+  var b=document.getElementById('btnStartCD');
+  if(b){b.textContent='计时中...';b.disabled=true;}
+  CD.timer=setInterval(cdTick,1000);
+};
+window.__resetCD=function(){
+  clearInterval(CD.timer);CD.timer=null;CD.remain=240;CD.started=false;
+  cdPaint();
+  var b=document.getElementById('btnStartCD');
+  if(b){b.textContent='开始倒计时';b.disabled=false;}
+};
+cdPaint();
+
+/* 滴答声开关（g1 倒计时背景音） */
+window.__tickOn=false;
+window.__tickSound=null;
+window.__toggleTick=(function(){
+  return function(){
+    var btn=document.getElementById('btnTick');
+    if(window.__tickOn){
+      window.__tickOn=false;
+      try{ac().resume&&ac().resume();}catch(e){}
+      if(btn){btn.textContent='开启滴答声';btn.style.background='var(--navy)';}
+      toast('滴答声已关闭');
+      return;
+    }
+    // 开启：初始化一段带倒计时秒针的滴答声（每 1 秒一声"滴"）
+    var c=ac();if(!c){toast('当前环境不支持音频');return;}
+    try{c.resume&&c.resume();}catch(e){}
+    window.__tickOn=true;
+    if(btn){btn.textContent='关闭滴答声';btn.style.background='var(--red)';}
+    var count=0;
+    function tick(){
+      if(!window.__tickOn)return;
+      try{
+        var o=c.createOscillator(),gr=c.createGain();
+        o.type='sine';o.frequency.value=760;
+        gr.gain.value=.14;
+        o.connect(gr);gr.connect(c.destination);
+        var t=c.currentTime;o.start(t);o.stop(t+.05);
+        gr.gain.setValueAtTime(.14,t);gr.gain.exponentialRampToValueAtTime(.001,t+.05);
+      }catch(e){}
+      count++;
+    }
+    tick();
+    window.__tickSound=setInterval(tick,1000);
+    toast('滴答声已开启，跟随倒计时感受时间流逝');
+  };
+})();
+
+/* 施救者身份互动（c1） */
+window.__rescue=function(which){
+  var pub=document.getElementById('rescuePub'),tr=document.getElementById('rescueTr'),
+      def=document.getElementById('rescueDef'),out=document.getElementById('rescueOut');
+  if(!pub||!out)return;
+  pub.style.background='#D9E6F5';pub.style.color='var(--navy)';
+  tr.style.background='#D9E6F5';tr.style.color='var(--navy)';
+  if(which==='pub'){pub.style.background='var(--navy)';pub.style.color='#fff';}
+  else{tr.style.background='var(--navy)';tr.style.color='#fff';}
+  def.style.display='none';out.style.display='block';
+  out.innerHTML = (which==='pub')
+    ? '<div style="font-size:13px;font-weight:800;color:var(--navy);margin-bottom:8px">你的做法（未受训 · 单纯胸外按压）</div>'
+      +'<div class="steps"><div class="step"><span class="n">1</span><div class="bd"><div class="t">拨打 120 并开免提</div><div class="d">按调度员电话指导操作，不挂断。</div></div></div>'
+      +'<div class="step alt"><span class="n">2</span><div class="bd"><div class="t">单纯胸外按压</div><div class="d">两乳头连线中点，掌根垂直下压 5~6cm，100~120 次/分。</div></div></div>'
+      +'<div class="step"><span class="n">3</span><div class="bd"><div class="t">尽快取 AED</div><div class="d">让旁人去取，开机按语音提示使用，持续到救援到达。</div></div></div></div>'
+    : '<div style="font-size:13px;font-weight:800;color:var(--navy);margin-bottom:8px">你的做法（受过培训 · 30:2 循环）</div>'
+      +'<div class="steps"><div class="step"><span class="n">1</span><div class="bd"><div class="t">呼救取 AED</div><div class="d">拨打 120，让人取 AED，同时开始按压。</div></div></div>'
+      +'<div class="step alt"><span class="n">2</span><div class="bd"><div class="t">按压 30 次</div><div class="d">位置/深度/频率同规范，尽量减少中断。</div></div></div>'
+      +'<div class="step"><span class="n">3</span><div class="bd"><div class="t">开放气道吹气 2 次</div><div class="d">仰头抬颏，每次约 1 秒，看到胸廓起伏；30:2 循环。</div></div></div>'
+      +'<div class="step alt"><span class="n">4</span><div class="bd"><div class="t">AED 到达即用</div><div class="d">贴电极片，按语音提示，需要时除颤后继续按压。</div></div></div></div>';
+};
+
+/* 复苏存活率曲线（g1） */
+window.__initChart=(function(){
+  var done=false;
+  function draw(){
+    var el=document.getElementById('chartSurvive');
+    if(!window.echarts||!el||done)return; done=true;
+    var c=echarts.init(el);
+    c.setOption({
+      tooltip:{trigger:'axis',confine:true,formatter:function(ps){var p=ps[0];return '<b>延误 '+p.axisValue+' 分钟</b><br/>相对存活机会约 <b>'+p.value+'%</b>'}},
+      grid:{left:44,right:18,top:26,bottom:34},
+      xAxis:{type:'category',data:['0','1','2','3','4','5','6','7','8','9','10'],name:'心跳未恢复的延误分钟',axisLabel:{color:'#6B7C93'},nameTextStyle:{color:'#6B7C93'}},
+      yAxis:{type:'value',max:100,name:'相对存活机会 %',axisLabel:{color:'#6B7C93',formatter:'{value}'},nameTextStyle:{color:'#6B7C93'},splitLine:{lineStyle:{color:'#E6EAF0'}}},
+      series:[{type:'line',data:[100,91,82,74,66,58,50,42,34,26,18],smooth:true,symbolSize:6,lineStyle:{width:3,color:'#E63946'},itemStyle:{color:'#E63946'},areaStyle:{color:'rgba(230,57,70,.12)'},markLine:{silent:true,symbol:'none',lineStyle:{color:'#E63946',type:'dashed',width:1.5},label:{color:'#C73E48',fontSize:11},data:[{xAxis:4,label:{formatter:'黄金 4 分钟窗口',position:'insideEndTop'}}]}}]
+    });
+  }
+  function retry(){setTimeout(draw,150);}
+  return function(){draw();if(!window.echarts)retry();};
+})();
+
+/* 按压节拍器（c2） */
+window.__initPresser=(function(){
+  var timer=null,count=0,started=false;
+  function beat(){
+    count++;
+    var el=document.getElementById('pressCount'),p=document.getElementById('press');
+    if(el)el.textContent=count;
+    if(p){p.style.transform='scale(.94)';setTimeout(function(){p.style.transform='scale(1)';},80);}
+    try{beep(180,.10,.06,'sine');}catch(e){}
+  }
+  return function(){
+    if(started)return; started=true;
+    if(timer)clearInterval(timer); count=0;
+    var el=document.getElementById('pressCount');if(el)el.textContent='0';
+    timer=setInterval(beat,Math.round(60000/110));
+    var b=document.getElementById('btnMetronome');if(b){b.textContent='节拍进行中 · 110 次/分';}
+  };
+})();
+window.__stopPress=function(){
+  window.__initPresser.started=false;
+  if(window.__initPresser.timer)clearInterval(window.__initPresser.timer);
+  window.__initPresser.timer=null;
+  var b=document.getElementById('btnMetronome');if(b){b.textContent='开始节拍器';}
+};
+window.__resetPress=function(){window.__stopPress();var el=document.getElementById('pressCount');if(el)el.textContent='0';var bar=document.getElementById('depthBar'),val=document.getElementById('depthVal');if(bar)bar.style.width='0%';if(val){val.textContent='— cm';val.style.color='#7FDCE0';}};
+
+/* 判断步骤点选（c1） */
+(function(){
+  var wrap=document.getElementById('c1steps'),v=document.getElementById('c1v');
+  if(!wrap)return;
+  var bts=wrap.querySelectorAll('.opt');
+  for(var i=0;i<bts.length;i++)bts[i].addEventListener('click',function(){
+    for(var k=0;k<bts.length;k++)bts[k].classList.remove('selected');
+    this.classList.add('selected');
+    v.textContent=this.getAttribute('data-d');
+    v.className='verdict show';v.style.color='var(--navy)';v.style.background='#EFF5FB';v.style.borderColor='#C9DCF3';
+  });
+})();
+
+/* 止血情景选择（b1） */
+(function(){
+  var opts=document.querySelectorAll('#b1opts .opt'),v=document.getElementById('b1v');
+  for(var i=0;i<opts.length;i++)opts[i].addEventListener('click',function(){
+    for(var k=0;k<opts.length;k++)opts[k].classList.remove('selected','correct','wrong');
+    this.classList.add('selected');
+    if(this.getAttribute('data-c')){
+      this.classList.add('correct');
+      v.textContent='回答正确！直接压迫是首选，能有效控制大部分出血。';
+      v.className='verdict show right';soundRight();
+    }else{
+      this.classList.add('wrong');
+      v.textContent='不对。正确做法是用干净敷料直接持续压迫伤口；不要撒粉、摇晃或反复冲洗。';
+      v.className='verdict show wrong';soundWrong();
+    }
+  });
+})();
+
+/* 五字诀点选（bu1） */
+(function(){
+  var wrap=document.getElementById('bu1steps'),v=document.getElementById('bu1v');
+  if(!wrap)return;
+  var bts=wrap.querySelectorAll('.opt');
+  for(var i=0;i<bts.length;i++)bts[i].addEventListener('click',function(){
+    for(var k=0;k<bts.length;k++)bts[k].classList.remove('selected');
+    this.classList.add('selected');
+    v.textContent=this.getAttribute('data-d');
+    v.className='verdict show';v.style.color='var(--navy)';v.style.background='#EFF5FB';v.style.borderColor='#C9DCF3';
+  });
+})();
+
+/* 自救/婴儿切换（h2） */
+(function(){
+  var tabs=document.querySelectorAll('#h2tabs .tag');
+  var panels={self:document.getElementById('h2self'),baby:document.getElementById('h2baby')};
+  if(!tabs.length||!panels.self)return;
+  function set(k){
+    for(var i=0;i<tabs.length;i++){var on=tabs[i].getAttribute('data-t')===k;tabs[i].style.background=on?'var(--red)':'var(--aqua-l)';tabs[i].style.color=on?'#fff':'var(--navy)';}
+    panels.self.style.display=k==='self'?'block':'none';
+    panels.baby.style.display=k==='baby'?'block':'none';
+  }
+  for(var j=0;j<tabs.length;j++)tabs[j].addEventListener('click',function(){set(this.getAttribute('data-t'));});
+  set('self');
+})();
+
+/* 烧烫伤误区判断题（bu2） */
+var BURNS=[
+  {t:'烫伤后立刻涂牙膏能消炎止痛',c:0,exp:'错误。牙膏会加重损伤并引发感染，正确做法是冲冷水。'},
+  {t:'烫伤水泡要尽快挑破放出液体',c:0,exp:'错误。不要挑破水泡，保持完整有助于保护创面。'},
+  {t:'烫伤后应立即用流动冷水冲洗15~20分钟',c:1,exp:'正确。冷水降温是五字诀第一步。'},
+  {t:'用冰块直接贴住烫伤处降温效果更好',c:0,exp:'错误。冰块直接贴会冻伤组织，应使用流动冷水。'},
+  {t:'烫伤面积超过一个手掌大应及时就医',c:1,exp:'正确。面积较大的烧烫伤需专业处理。'},
+  {t:'脱衣时若衣服粘住伤口，应强行撕下',c:0,exp:'错误。粘住应剪开而非硬撕，以免加重皮肤损伤。'}
+];
+(function(){
+  var host=document.getElementById('bu3q'),v=document.getElementById('bu3v');
+  if(!host)return;
+  var h='';
+  for(var i=0;i<BURNS.length;i++){
+    h+='<div style="margin:14px 0"><p style="font-weight:700;color:var(--navy)">'+(i+1)+'. '+BURNS[i].t+'</p><div style="display:flex;gap:10px;margin-top:8px"><button class="btn sm ghost" data-i="'+i+'" data-a="1">对</button><button class="btn sm ghost" data-i="'+i+'" data-a="0">错</button></div></div>';
+  }
+  host.innerHTML=h;
+  host.addEventListener('click',function(e){
+    var b=e.target.closest('button[data-i]');if(!b)return;
+    var i=+b.getAttribute('data-i'),a=+b.getAttribute('data-a');
+    var correct=a===BURNS[i].c;
+    b.style.background=correct?'var(--ok)':'var(--red)';b.style.color='#fff';
+    var bts=host.querySelectorAll('button[data-i="'+i+'"]');
+    for(var k=0;k<bts.length;k++){bts[k].disabled=true;if(bts[k]!==b)bts[k].style.opacity=.5;}
+    v.textContent=BURNS[i].exp;v.className='verdict show '+(correct?'right':'wrong');
+    correct?soundRight():soundWrong();
+  });
+})();
+
+/* CPR 完整流程动画（c4） */
+var FLOW=['确认现场安全','判断意识（拍肩呼叫）','判断呼吸','呼救 120 + 取 AED','胸外按压（位置/深度/频率）','按压 30 次','人工呼吸 2 次','30:2 循环','AED 按提示使用','专业救援接手后停止'];
+function flowSVG(){
+  var wrap=document.getElementById('flowWrap');if(!wrap)return;
+  var n=FLOW.length,W=320,H=n*56+16;
+  var s='<svg viewBox="0 0 '+W+' '+H+'" width="100%" style="display:block">';
+  for(var i=0;i<n;i++){
+    var y=i*56+28;
+    if(i>0){s+='<line class="farrow" x1="40" y1="'+(y-28)+'" x2="40" y2="'+(y-15)+'" stroke="#C9D3E0" stroke-width="2.5"/>';}
+    s+='<circle class="fnode" cx="40" cy="'+y+'" r="16" fill="#E6EAF0" stroke="#9AA9BD" stroke-width="1.5"/><text class="fnlbl" x="40" y="'+y+'" text-anchor="middle" dy="5" font-size="13" font-weight="800">'+(i+1)+'</text>';
+    s+='<text x="70" y="'+(y+5)+'" font-size="13.5" fill="#5B6F8B" font-weight="600">'+FLOW[i]+'</text>';
+  }
+  s+='</svg>';
+  s+='<style>#flowWrap .fnode.on{fill:#E63946;stroke:#C1121F;transition:fill .2s;}#flowWrap .fnode.on+.fnlbl{fill:#fff;}#flowWrap .farrow.on{stroke:#E63946;transition:stroke .2s;}</style>';
+  wrap.innerHTML=s;
+}
+function playFlow(){
+  var nodes=document.querySelectorAll('#flowWrap .fnode'),arrows=document.querySelectorAll('#flowWrap .farrow');
+  nodes.forEach(function(n){n.classList.remove('on');});
+  arrows.forEach(function(a){a.classList.remove('on');});
+  var i=0;
+  function step(){
+    if(i>=nodes.length)return;
+    nodes[i].classList.add('on');
+    if(i>0)arrows[i-1].classList.add('on');
+    beep(700,.10,.06,'sine');
+    i++;
+    setTimeout(step,520);
+  }
+  step();
+}
+flowSVG();
+
+/* 实战闯关（qz） */
+var QZ=[
+  {m:'心肺复苏',q:'发现有人倒地且无反应，第一步应做什么？',opts:['确认现场安全并判断意识','立即用力按压','先拍视频求助','把TA背起来送医院'],a:0,exp:'先确认环境安全，再判断意识与呼吸，别慌。'},
+  {m:'心肺复苏',q:'胸外按压的正确位置是哪里？',opts:['腹部','两乳头连线中点（胸骨下半部）','心窝偏左','锁骨上'],a:1,exp:'按压位置在胸骨下半部、两乳头连线中点。'},
+  {m:'心肺复苏',q:'成人胸外按压深度应为？',opts:['1~2cm','3~4cm','至少5cm且不超过6cm','越深越好'],a:2,exp:'成人按压深度至少5cm、不超过6cm。'},
+  {m:'心肺复苏',q:'按压频率应保持在？',opts:['60~80次/分','100~120次/分','140次/分以上','越慢越好'],a:1,exp:'频率 100~120 次/分，尽量不间断。'},
+  {m:'心肺复苏',q:'按压与人工呼吸的比例是？',opts:['15:2','30:2','5:1','40:3'],a:1,exp:'成人 CPR 按 30:2 循环。'},
+  {m:'气道异物',q:'成人吃东西被噎住，无法呼吸、面色发紫，应？',opts:['喂水帮助吞咽','拍背灌醋','5次背部拍击+5次腹部冲击交替','让其平躺'],a:2,exp:'重症气道梗阻采用拍背与腹部冲击交替法，不要喂水拍醋。'},
+  {m:'气道异物',q:'独自一人被噎住，可采取的自救方法是？',opts:['干等旁人','趴下休息','用椅背抵住脐上向上冲击','用力弯腰'],a:2,exp:'可借椅背/桌缘对脐上做向上冲击自救。'},
+  {m:'止血包扎',q:'手腕被割伤血流不止，首选处理是？',opts:['撒香灰','用干净敷料直接压迫伤口','反复冲洗摇晃','用绳子死扎手腕'],a:1,exp:'持续直接压迫是止血首选；不要撒粉，止血带不可自行松开。'},
+  {m:'烧烫伤',q:'烫伤后第一步应做什么？',opts:['涂牙膏','用流动凉水冲洗约20分钟','挑破水泡','冰块直接敷'],a:1,exp:'第一步是流动凉水冷却约20分钟；牙膏、冰块都是误区。'},
+  {m:'烧烫伤',q:'下列哪种情况必须尽快就医？',opts:['轻微发红无起泡','烫伤面积超过一个手掌大','很小的一度烫伤','已经完全不痛'],a:1,exp:'面积大、深、面部关节、老人儿童等须就医。'}
+];
+(function(){
+  var box=document.getElementById('qzBox');if(!box)return;
+  var answers=new Array(QZ.length).fill(null);
+  var cur=0,left=30,timer=null,submitted=false,quizEntered=false;
+  var noEl=document.getElementById('qzNo'),tm=document.getElementById('qzTimer'),qEl=document.getElementById('qzQ'),optEl=document.getElementById('qzOpts');
+  var pv=document.getElementById('qzPrev'),nx=document.getElementById('qzNext'),sb=document.getElementById('qzSubmit');
+  var labels=['A','B','C','D'];
+  function startTimer(){
+    if(submitted||timer)return;
+    timer=setInterval(function(){
+      left--;tm.textContent=left+'s';
+      if(left<=5)tm.style.color='#E1112B';
+      if(left<=0){clearInterval(timer);timer=null;if(answers[cur]===null)answers[cur]=-1;if(cur<QZ.length-1){cur++;show();}else{renderSubmit();}}
+    },1000);
+  }
+  function stopTimer(){if(timer){clearInterval(timer);timer=null;}}
+  function show(){
+    if(submitted)return;
+    left=30;tm.style.color='var(--red)';
+    var q=QZ[cur];
+    noEl.textContent='第 '+(cur+1)+' 题 / '+QZ.length;
+    tm.textContent=left+'s';qEl.textContent=q.q;
+    var h='';
+    for(var i=0;i<q.opts.length;i++)h+='<button class="opt'+(answers[cur]===i?' selected':'')+'" data-i="'+i+'"><span class="o">'+labels[i]+'</span><span>'+q.opts[i]+'</span></button>';
+    optEl.innerHTML=h;
+    pv.disabled=(cur===0);nx.disabled=(cur===QZ.length-1);
+    var bar=document.getElementById('qzBar');if(bar)bar.style.width=((cur+1)/QZ.length*100)+'%';
+    var sc=document.getElementById('qzScore');if(sc)sc.textContent=(answers.filter(function(a){return a!==null;}).length)+' 题已答';
+    stopTimer();
+    startTimer();
+  }
+  function pick(i){
+    if(submitted)return;
+    answers[cur]=i;
+    var bts=optEl.querySelectorAll('.opt');
+    for(var k=0;k<bts.length;k++)bts[k].classList.remove('selected');
+    bts[i].classList.add('selected');
+  }
+  function renderSubmit(){
+    submitted=true;
+    stopTimer();
+    var score=0;
+    for(var i=0;i<QZ.length;i++){if(answers[i]===QZ[i].a)score+=10;}
+    var bar=document.getElementById('qzBar');if(bar)bar.style.width='100%';
+    var sc=document.getElementById('qzScore');if(sc)sc.textContent=score+' 分';
+    box.style.display='none';
+    var rs=document.getElementById('qzResult');rs.style.display='block';
+    var g=document.getElementById('qzGrade'),gn=document.getElementById('qzGradeName'),note=document.getElementById('qzGradeNote');
+    g.textContent=score+' 分';
+    gn.textContent=score>=90?'急救达人':score>=70?'急救能手':score>=50?'急救新手':'还需学习';
+    note.textContent=score>=70?'掌握得很好，关键时刻你值得被信任！':'建议回到各板块复习一下，再接再厉！';
+    var d=document.getElementById('qzDetail');
+    var mods={},order=[];
+    for(var j=0;j<QZ.length;j++){var mm=QZ[j].m;if(!mods[mm]){mods[mm]={t:0,r:0};order.push(mm);}mods[mm].t++;if(answers[j]===QZ[j].a)mods[mm].r++;}
+    var h='<h2 class="sec" style="margin:6px 0 10px">各知识模块掌握情况</h2><div class="card" style="margin-bottom:14px">';
+    for(var mi=0;mi<order.length;mi++){var key=order[mi],o=mods[key],pct=Math.round(o.r/o.t*100),col=pct>=80?'#2A9D8F':(pct>=50?'#E9A23B':'#E1112B');
+      h+='<div style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;font-size:13.5px;font-weight:700;color:var(--navy);margin-bottom:5px"><span>'+key+'</span><span style="color:'+col+'">'+o.r+' / '+o.t+' 题 · '+pct+'%</span></div><div style="height:9px;background:#EDF1F6;border-radius:5px;overflow:hidden"><div style="height:100%;width:'+pct+'%;background:'+col+';border-radius:5px;transition:width .5s"></div></div></div>';}
+    h+='<p class="small" style="color:var(--gray);margin:8px 0 0">绿色=掌握较好，黄色=需要巩固，红色=建议回到对应板块重学。下方为逐题解析。</p></div>';
+    h+='<h2 class="sec" style="margin:16px 0 4px">逐题解析</h2>';
+    for(var j=0;j<QZ.length;j++){
+      var a=answers[j];var ok=a===QZ[j].a;
+      var your=(a===null||a===-1)?'未答':labels[a];
+      h+='<div class="card" style="margin:10px 0;border-left:5px solid '+(ok?'#2A9D8F':'#E1112B')+'"><p style="font-weight:800;color:var(--navy);font-size:15px">'+(j+1)+'. '+QZ[j].q+'　<span style="display:inline-block;font-size:11px;font-weight:700;background:#EDF1F6;color:#5B6F8B;padding:2px 8px;border-radius:8px;margin:0 4px">'+QZ[j].m+'</span><span style="color:'+(ok?'#2A9D8F':'#E1112B')+'">'+(ok?'对':'错')+'</span></p><p class="small" style="margin-top:6px">你的答案：'+your+'　·　正确答案：'+labels[QZ[j].a]+'</p><p style="font-size:14px;color:#3E5470;margin-top:6px">'+QZ[j].exp+'</p></div>';
+    }
+    d.innerHTML=h;
+    window.scrollTo(0,0);
+    reveal(rs);
+  }
+  optEl.addEventListener('click',function(e){var b=e.target.closest('.opt');if(b)pick(+b.getAttribute('data-i'));});
+  pv.addEventListener('click',function(){if(cur>0&&!submitted){cur--;show();}});
+  nx.addEventListener('click',function(){if(cur<QZ.length-1&&!submitted){cur++;show();}});
+  sb.addEventListener('click',function(){if(!submitted)renderSubmit();});
+  window.restartQuiz=function(){
+    submitted=false;answers=new Array(QZ.length).fill(null);cur=0;quizEntered=true;
+    box.style.display='block';
+    document.getElementById('qzResult').style.display='none';
+    document.getElementById('qzDetail').innerHTML='';
+    var bar=document.getElementById('qzBar');if(bar)bar.style.width='0%';
+    var sc=document.getElementById('qzScore');if(sc)sc.textContent='0 分';
+    show();
+  };
+  window.__enterQuiz=function(){
+    if(submitted)return;
+    if(!quizEntered){quizEntered=true;show();}
+    else{startTimer();}
+  };
+  window.__exitQuiz=function(){stopTimer();};
+})();
+
+/* 开场过渡页（splash） */
+function closeSplash(){var s=document.getElementById('splash');if(!s)return;s.classList.add('hide');setTimeout(function(){if(s.parentNode)s.parentNode.removeChild(s);},500);document.body.style.overflow='';}
+(function(){var s=document.getElementById('splash');if(!s)return;document.body.style.overflow='hidden';var b=s.querySelector('.spl-bar i'),t0=Date.now(),dur=4000;var anim=setInterval(function(){var p=Math.min((Date.now()-t0)/dur,1);if(b)b.style.width=(p*100)+'%';if(p>=1){clearInterval(anim);closeSplash();}},40);})();
+/* 分步图解自动演示 */
+(function(){var groups=[['.hsteps .hs',2600]];groups.forEach(function(g){var hs=document.querySelectorAll(g[0]);if(!hs.length)return;var i=0;function show(){for(var k=0;k<hs.length;k++)hs[k].classList.toggle('active',k===i);}show();setInterval(function(){i=(i+1)%hs.length;show();},g[1]);hs.forEach(function(el,k){el.addEventListener('click',function(){i=k;show();});});});})();
+
+/* AI 急救助手（前端规则引擎） */
+var AI_KB=[
+ {keys:['婴儿','宝宝','小孩','儿童','呛奶'],ans:'婴儿（1岁以下）呛噎：若还能哭、能咳嗽，保持观察并呼救。无法哭咳、面色发紫时：① 俯卧于前臂，头低脚高并托住头颈；② 掌根在两肩胛骨之间拍背5次；③ 翻正仰卧，用单手掌根在胸骨中部做胸部冲击5次；④ 拍背与胸部冲击交替进行直到异物排出。切勿用手指抠，也切勿套用成人腹部冲击。失去反应立即呼救并开始婴儿心肺复苏。'},
+ {keys:['晕倒','晕厥','无意识','没反应','心脏停','骤停','倒地'],ans:'可能是心脏骤停：① 确认现场安全；② 轻拍双肩呼喊判断意识；③ 观察胸部起伏5~10秒判断呼吸；④ 无反应且无正常呼吸（或仅有濒死叹息），立即拨打120、开免提按调度员指导，并让人取AED；⑤ 受过训练者做胸外按压+人工呼吸（30:2），未受训者可在调度员指导下做单纯胸外按压（两乳头连线中点，深5~6cm，100~120次/分），持续到急救到达。'},
+ {keys:['烫','烧','灼伤'],ans:'烧烫伤处理：① 冷却——立即用流动凉水冲洗伤处约20分钟（大面积注意保暖防失温）；② 小心去除饰品和未粘连衣物，粘连部分不要硬撕；③ 用清洁、不粘连的敷料松散覆盖，不挑破水疱；④ 严重、深部、大面积、面部关节或化学、电烧伤及时就医。不要涂牙膏酱油，不要让冰块直接接触创面，也不建议长时间浸泡。'},
+ {keys:['出血','流血','割伤','划伤','伤口'],ans:'止血步骤：① 确保现场安全，尽量戴手套或用干净布隔离；② 直接压迫——用干净敷料盖住伤口持续用力按压，不要频繁揭开查看；③ 血浸透敷料时在上面再加一层继续压，或加压包扎；④ 四肢危及生命的大出血、压迫无效且具备止血带条件时，按规范使用并记录时间，不要自行松开，立即拨打120。严重程度主要看出血量、是否持续流淌或喷射、有无头晕面色苍白出冷汗等休克迹象，不要只凭颜色判断。不要往伤口撒面粉、香灰。'},
+ {keys:['噎','呛','异物','卡喉','窒息'],ans:'气道异物梗阻：若还能用力咳嗽、说话或呼吸，鼓励其继续有效咳嗽并密切观察，不要急于冲击。若无法咳嗽、说话、呼吸（面色发紫）：成人/儿童用拍背+腹部冲击交替——先5次背部拍击（两肩胛骨间），再站背后环抱腰部、拳眼对准脐上两横指做5次腹部冲击，交替进行至异物排出；孕妇/肥胖者改胸部冲击。一旦失去反应，立即拨打120、平放并开始心肺复苏，不再继续冲击。'},
+ {keys:['黄金','4分钟','四分钟','时间','多久'],ans:'心脏骤停后，大脑等重要器官会迅速缺氧，越早识别、越早呼救并开始心肺复苏、越早使用AED，生存机会越大。不要等待某个”黄金时间”过去才行动，也不要因担心已经延误而放弃施救——任何时候开始都有意义。请先确保现场安全，拨打120后可开免提，按急救调度员的指导操作。'}
+];
+function aiEsc(s){var d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+function aiAsk(t){document.getElementById('aiInput').value=t;aiSend();}
+var AI_DANGER=[
+ {keys:['喂水','灌水','喝水','喂点水'],ans:'请注意：噎住或意识不清时喂水可能导致呛咳、误吸甚至窒息，非常危险！气道梗阻应使用海姆立克法，昏迷者不要喂任何东西，立即拨打120。'},
+ {keys:['香灰','面粉','牙粉','烟丝','草木灰','撒点'],ans:'不要往伤口撒香灰、面粉、烟丝等，会污染伤口、增加感染风险并妨碍医生处理。正确做法是用干净敷料持续直接压迫止血。'},
+ {keys:['松止血带','松开止血带','放松止血带','止血带松','定时松'],ans:'止血带一旦规范使用，不要自行松开或取下！自行放松可能导致再次大出血而危及生命。应记录使用时间、立即拨打120，由专业医务人员处理。'},
+ {keys:['掐人中','掐人'],ans:'掐人中对心脏骤停没有救治作用，反而延误抢救。判断无意识、无正常呼吸后应立即呼救、取AED并开始心肺复苏。'},
+ {keys:['牙膏','酱油','大酱','獾油'],ans:'烧烫伤不要涂牙膏、酱油等，会污染创面、影响医生判断并加重损伤。应立即用流动凉水冲洗约20分钟。'},
+ {keys:['冰块直接','冰敷伤口','冰块敷'],ans:'不要让冰块直接接触烧烫伤创面，可能造成冻伤。用流动凉水冲洗降温即可。'}
+];
+function aiSend(){
+  var inp=document.getElementById('aiInput');var q=inp.value.trim();if(!q)return;
+  var box=document.getElementById('aiBox');
+  box.innerHTML+='<div class="ai-msg u"><div class="ai-text">'+aiEsc(q)+'</div></div>';
+  inp.value='';box.scrollTop=box.scrollHeight;
+  var ans='';
+  for(var d=0;d<AI_DANGER.length;d++){for(var k=0;k<AI_DANGER[d].keys.length;k++){if(q.indexOf(AI_DANGER[d].keys[k])>=0){ans=AI_DANGER[d].ans;break;}}if(ans)break;}
+  if(!ans){for(var i=0;i<AI_KB.length;i++){for(var j=0;j<AI_KB[i].keys.length;j++){if(q.indexOf(AI_KB[i].keys[j])>=0){ans=AI_KB[i].ans;break;}}if(ans)break;}}
+  if(!ans){
+    var emg=['晕倒','昏迷','没呼吸','大出血','喷血','窒息','发紫','车祸','溺水','触电','中毒'];
+    var isEmg=false;for(var e=0;e<emg.length;e++){if(q.indexOf(emg[e])>=0)isEmg=true;}
+    ans=isEmg?'情况可能很紧急，请立即拨打120！同时告诉我：患者是否有意识、能否正常呼吸、出血还是噎住，我好给你更准确的指导。':'为了给你准确的急救步骤，请描述清楚：发生了什么（晕倒/烫伤/出血/噎住等）、患者现在的状态（有无意识、呼吸、出血情况）。紧急情况请先拨打120。';
+  }
+  setTimeout(function(){
+    box.innerHTML+='<div class="ai-msg a"><div class="ai-avatar">AI</div><div class="ai-text">'+aiEsc(ans)+'</div></div>';
+    box.scrollTop=box.scrollHeight;
+  },500);
+}
+
+/* 海姆立克 tab 切换 */
+(function(){
+  var tabs=document.querySelectorAll('.hm-tab');
+  if(!tabs.length)return;
+  var panels={adult:document.getElementById('hm-adult'),self:document.getElementById('hm-self'),baby:document.getElementById('hm-baby')};
+  tabs.forEach(function(tab){
+    tab.addEventListener('click',function(){
+      var key=this.getAttribute('data-t');
+      tabs.forEach(function(t){
+        t.classList.remove('active');
+        t.style.background='var(--aqua-l)';
+        t.style.color='var(--navy)';
+        t.style.boxShadow='none';
+      });
+      this.classList.add('active');
+      this.style.background='var(--red)';
+      this.style.color='#fff';
+      this.style.boxShadow='0 6px 16px rgba(230,57,70,.3)';
+      for(var k in panels){
+        if(panels[k])panels[k].style.display=(k===key)?'block':'none';
+      }
+    });
+  });
+})();
+
+buildNav();
+goPage('home');
+</script>
+</body>
+</html>
